@@ -79,7 +79,7 @@ export default function AdminPage() {
 
   const stats = {
     total: orders.length,
-    revenue: orders.reduce((acc, o) => acc + (o.plates * 150), 0),
+    revenue: orders.reduce((acc, o) => acc + (o.plates * 200), 0),
     active: orders.filter(o => o.status !== 'Received').length,
     ready: orders.filter(o => o.status === 'Ready').length
   };
@@ -220,7 +220,7 @@ export default function AdminPage() {
                     <span className={styles.detailLabel}>Momo Details</span>
                     <span className={styles.detailValue} style={{ color: '#ef4444', fontWeight: 800 }}>
                       {order.plates} Plates ({order.plates * 10} Pieces)
-                      <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: 600 }}>Rs. {order.plates * 150}</span>
+                      <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: 600 }}>Rs. {order.plates * 200}</span>
                     </span>
                   </div>
 

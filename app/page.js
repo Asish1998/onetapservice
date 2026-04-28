@@ -239,7 +239,7 @@ export default function MomoPage() {
         <div className={styles.servingBadgeWrapper}>
           <span className={styles.servingBadge}>🎯 Currently Serving</span>
           <h2 className={styles.servingTitle}>Steamed Chicken Momo</h2>
-          <p className={styles.servingPrice}>Special Price: Rs. 150 / Plate</p>
+          <p className={styles.servingPrice}>Special Price: Rs. 200 / Plate</p>
         </div>
 
         {/* ORDER FORM */}
@@ -297,7 +297,7 @@ export default function MomoPage() {
                 +
               </button>
               <div className={styles.totalBadge}>
-                Total: Rs. {formData.plates * 150}
+                Total: Rs. {formData.plates * 200}
               </div>
             </div>
           </div>
