@@ -56,8 +56,31 @@
 }
 
 @media (max-width: 600px) {
+  .adminContainer {
+    padding: 1.5rem 1rem;
+  }
+  
+  .adminTitle {
+    font-size: 1.8rem;
+    width: 100%;
+  }
+  
+  .statsGrid {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .statCard {
+    padding: 1rem;
+  }
+
   .orderGrid {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .orderCard {
+    padding: 1.5rem;
   }
 }
 

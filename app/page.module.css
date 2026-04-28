@@ -70,9 +70,56 @@
 }
 
 @media (max-width: 768px) {
+  .heroSection {
+    height: 50vh;
+  }
+  
+  .title {
+    font-size: 3rem;
+  }
+
   .formSection {
-    margin: -3rem 1.5rem 3rem;
-    padding: 2.5rem;
+    margin: -4rem 1rem 3rem;
+    padding: 2rem 1.5rem;
+    border-radius: 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .landingTitle {
+    font-size: 2.2rem;
+  }
+  
+  .momoOneTap {
+    width: 220px;
+    height: 220px;
+  }
+  
+  .momoOneTapWrapper {
+    width: 240px;
+    height: 240px;
+  }
+
+  .tapInstruction {
+    padding: 0.6rem 1.2rem;
+    font-size: 1rem;
+  }
+
+  .sectionTitle {
+    font-size: 1.8rem;
+  }
+  
+  .platesCounter {
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+  }
+  
+  .totalBadge {
+    margin-left: 0;
+    margin-top: 1rem;
+    width: 100%;
+    text-align: center;
   }
 }
 
@@ -217,6 +264,19 @@
 .successActions {
   display: flex;
   gap: 1rem;
+}
+
+@media (max-width: 600px) {
+  .premiumSuccessCard {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.5rem;
+  }
+  
+  .successActions {
+    flex-direction: column;
+    width: 100%;
+  }
 }
 
 .callSupportBtn {
