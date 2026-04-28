@@ -22,14 +22,16 @@ export default function MomoPage() {
         const response = await fetch('/api/orders');
         const orders = await response.json();
         
-        // Get list of IDs this user has placed (from localStorage)
-        const myOrderIds = JSON.parse(localStorage.getItem('momo_my_order_ids') || '[]');
-        
-        // Filter for orders that match the user's recent IDs and are NOT Received
-        const myActiveOrders = orders.filter(o => 
-          myOrderIds.includes(o.id) && o.status !== 'Received'
-        );
-        setActiveOrders(myActiveOrders);
+        // Safety check: only filter if we actually got an array of orders
+        if (Array.isArray(orders)) {
+          const myOrderIds = JSON.parse(localStorage.getItem('momo_my_order_ids') || '[]');
+          
+          // Filter for orders that match the user's recent IDs and are NOT Received
+          const myActiveOrders = orders.filter(o => 
+            myOrderIds.includes(o.id) && o.status !== 'Received'
+          );
+          setActiveOrders(myActiveOrders);
+        }
       } catch (e) {
         console.error("Polling error:", e);
       }
