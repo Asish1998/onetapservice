@@ -909,3 +909,107 @@
     font-size: 1.1rem; /* Better tap target on small phones */
   }
 }
+
+.recipeCard {
+  background: white;
+  border-radius: 30px;
+  border: 1px solid #fed7aa;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(124, 45, 18, 0.05);
+  margin-bottom: 5rem;
+}
+
+.recipeHeader {
+  background: #fef2f2;
+  padding: 2.5rem;
+  border-bottom: 1px solid #fee2e2;
+  text-align: center;
+}
+
+.recipeBadge {
+  background: #ef4444;
+  color: white;
+  padding: 0.5rem 1.2rem;
+  border-radius: 50px;
+  font-weight: 800;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  display: inline-block;
+}
+
+.recipeHeader h3 {
+  font-size: 2rem;
+  color: #7c2d12;
+  margin: 0;
+}
+
+.recipeBody {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  padding: 2.5rem;
+  gap: 3rem;
+}
+
+.ingredientList h4, .methodList h4 {
+  font-size: 1.3rem;
+  color: #b91c1c;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #fee2e2;
+  padding-bottom: 0.5rem;
+  display: inline-block;
+}
+
+.ingredientList ul {
+  list-style: none;
+  padding: 0;
+}
+
+.ingredientList li {
+  padding: 0.6rem 0;
+  color: #9a3412;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ingredientList li::before {
+  content: '🥟';
+  font-size: 0.8rem;
+}
+
+.methodList ol {
+  padding-left: 1.5rem;
+  color: #4b2e2e;
+}
+
+.methodList li {
+  margin-bottom: 1.2rem;
+  line-height: 1.6;
+}
+
+.recipeFooter {
+  background: #fff7ed;
+  padding: 1.5rem;
+  text-align: center;
+  font-weight: 800;
+  color: #c2410c;
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .recipeBody {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    padding: 1.5rem;
+  }
+  
+  .recipeHeader {
+    padding: 2rem 1.5rem;
+  }
+  
+  .recipeHeader h3 {
+    font-size: 1.6rem;
+  }
+}
