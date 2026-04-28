@@ -7,6 +7,11 @@ export default function AdminPage() {
   const [orders, setOrders] = useState([]);
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('All');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [vaultInput, setVaultInput] = useState('');
+  
+  // You can change this code to your preferred password
+  const VAULT_CODE = "1234"; 
 
   const loadOrders = async () => {
     try {
@@ -78,6 +83,41 @@ export default function AdminPage() {
     active: orders.filter(o => o.status !== 'Received').length,
     ready: orders.filter(o => o.status === 'Ready').length
   };
+
+  if (!isAuthenticated) {
+    return (
+      <div className={styles.vaultOverlay}>
+        <div className={styles.vaultCard}>
+          <span className={styles.vaultIcon}>🔐</span>
+          <h2>Admin Vault</h2>
+          <p>Please enter the security code to access the dashboard.</p>
+          <input 
+            type="password" 
+            className={styles.vaultInput}
+            value={vaultInput}
+            onChange={(e) => setVaultInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && vaultInput === VAULT_CODE) setIsAuthenticated(true);
+            }}
+            placeholder="Enter Code"
+            autoFocus
+          />
+          <button 
+            className={styles.vaultBtn}
+            onClick={() => {
+              if (vaultInput === VAULT_CODE) {
+                setIsAuthenticated(true);
+              } else {
+                alert("Incorrect Vault Code");
+              }
+            }}
+          >
+            Access Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.adminContainer}>
@@ -207,9 +247,9 @@ export default function AdminPage() {
                 </div>
 
                 <div className={styles.actionGrid}>
-                  <button onClick={() => updateStatus(order.id, 'In Progress')} className={`${styles.actionBtn} ${styles.actionBtnGhost}`} disabled={order.status === 'In Progress'}>Preparing</button>
-                  <button onClick={() => updateStatus(order.id, 'Ready')} className={`${styles.actionBtn} ${styles.actionBtnPrimary}`} disabled={order.status === 'Ready'}>Mark Ready 🥟</button>
-                  <button onClick={() => updateStatus(order.id, 'In Delivery')} className={`${styles.actionBtn} ${styles.actionBtnGhost}`} disabled={order.status === 'In Delivery'}>Transit 🛵</button>
+                  <button onClick={() => updateStatus(order.id, 'In Progress')} className={`${styles.actionBtn} ${styles.actionBtnGhost}`} disabled={order.status === 'In Progress' || order.status === 'Received'}>Preparing</button>
+                  <button onClick={() => updateStatus(order.id, 'Ready')} className={`${styles.actionBtn} ${styles.actionBtnPrimary}`} disabled={order.status === 'Ready' || order.status === 'Received'}>Mark Ready 🥟</button>
+                  <button onClick={() => updateStatus(order.id, 'In Delivery')} className={`${styles.actionBtn} ${styles.actionBtnGhost}`} disabled={order.status === 'In Delivery' || order.status === 'Received'}>Transit 🛵</button>
                   <button onClick={() => updateStatus(order.id, 'Received')} className={`${styles.actionBtn} ${styles.actionBtnGhost}`} style={{ color: '#059669' }} disabled={order.status === 'Received'}>Completed ✅</button>
                   <button onClick={() => deleteOrder(order.id)} className={`${styles.actionBtn} ${styles.deleteBtn}`}>Archieve Order</button>
                 </div>
