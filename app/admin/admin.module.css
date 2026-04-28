@@ -1,0 +1,162 @@
+.adminContainer {
+  min-height: 100vh;
+  background: #f8fafc;
+  padding: 3rem 2rem;
+  font-family: 'Outfit', sans-serif;
+  color: #1e293b;
+}
+
+.adminHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4rem;
+  flex-wrap: wrap;
+  gap: 2rem;
+}
+
+.adminTitle {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.statsGrid {
+  display: flex;
+  gap: 2rem;
+}
+
+.statCard {
+  background: white;
+  padding: 1.5rem 2.5rem;
+  border-radius: 20px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+.statValue {
+  display: block;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #ef4444;
+}
+
+.statLabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.orderGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 2.5rem;
+}
+
+@media (max-width: 600px) {
+  .orderGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.orderCard {
+  background: white;
+  border-radius: 24px;
+  padding: 2.5rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+}
+
+.orderCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08);
+}
+
+.orderHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+}
+
+.orderInfo h3 {
+  font-size: 1.5rem;
+  margin-bottom: 0.3rem;
+}
+
+.orderDate {
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.statusBadge {
+  padding: 0.4rem 1rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.status-Placed { background: #fee2e2; color: #b91c1c; }
+.status-In-Progress { background: #fef3c7; color: #92400e; }
+.status-Ready { background: #dcfce7; color: #166534; }
+.status-In-Delivery { background: #e0f2fe; color: #0369a1; }
+
+.customerSection {
+  margin-bottom: 2rem;
+}
+
+.detailRow {
+  margin-bottom: 1rem;
+  font-size: 1.05rem;
+}
+
+.detailRow strong {
+  display: block;
+  font-size: 0.85rem;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 0.2rem;
+}
+
+.actionGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.statusBtn {
+  padding: 0.8rem;
+  border-radius: 12px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.statusBtn:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+.btn-progress { background: #fbbf24; color: #78350f; }
+.btn-ready { background: #22c55e; color: white; }
+.btn-delivery { background: #3b82f6; color: white; }
+.btn-delete { background: #ef4444; color: white; grid-column: span 2; }
+
+.emptyState {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 8rem;
+  color: #64748b;
+}
+
+.emptyIcon {
+  font-size: 4rem;
+  display: block;
+  margin-bottom: 1.5rem;
+}

@@ -1,66 +1,267 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client';
 
-export default function Home() {
+import { useState, useEffect } from 'react';
+import styles from './page.module.css';
+
+export default function MomoPage() {
+  const [formData, setFormData] = useState({
+    name: '',
+    phone: '',
+    location: '',
+    plates: 1
+  });
+  const [activeOrders, setActiveOrders] = useState([]);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [hasTapped, setHasTapped] = useState(false);
+  const [isLaunching, setIsLaunching] = useState(false);
+
+  // Poll for status updates from the server
+  useEffect(() => {
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await fetch('/api/orders');
+        const orders = await response.json();
+        
+        // Get list of IDs this user has placed (from localStorage)
+        const myOrderIds = JSON.parse(localStorage.getItem('momo_my_order_ids') || '[]');
+        
+        // Filter for orders that match the user's recent IDs and are NOT Received
+        const myActiveOrders = orders.filter(o => 
+          myOrderIds.includes(o.id) && o.status !== 'Received'
+        );
+        setActiveOrders(myActiveOrders);
+      } catch (e) {
+        console.error("Polling error:", e);
+      }
+    }, 2000);
+
+    return () => clearInterval(pollInterval);
+  }, [formData.phone]);
+
+  const handleGetLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          setFormData(prev => ({ ...prev, location: `Pinned: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}` }));
+          try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`);
+            const data = await response.json();
+            if (data.display_name) setFormData(prev => ({ ...prev, location: data.display_name }));
+          } catch (e) { }
+        },
+        () => alert("Error getting location.")
+      );
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const newOrder = { ...formData, status: 'Placed', date: new Date().toLocaleString(), id: Date.now() };
+    
+    try {
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newOrder)
+      });
+      
+      if (response.ok) {
+        const myOrderIds = JSON.parse(localStorage.getItem('momo_my_order_ids') || '[]');
+        localStorage.setItem('momo_my_order_ids', JSON.stringify([newOrder.id, ...myOrderIds]));
+        localStorage.setItem('momo_customer_phone', formData.phone); 
+        setShowSuccess(true);
+        setFormData({ ...formData, name: '', location: '', plates: 1 });
+        setTimeout(() => setShowSuccess(false), 5000);
+      }
+    } catch (e) {
+      alert("Error placing order. Please check your connection.");
+    }
+  };
+
+  const handleTap = () => {
+    setIsLaunching(true);
+    // Play sound if possible, but for now just animate
+    setTimeout(() => {
+      setHasTapped(true);
+      setIsLaunching(false);
+      // Smooth scroll check if needed, but it's an overlay so it just disappears
+    }, 1000);
+  };
+
+  const getStatusStep = (status) => {
+    const steps = ['Placed', 'In Progress', 'Ready', 'In Delivery'];
+    return steps.indexOf(status);
+  };
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.js file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className={styles.momoContainer}>
+      {/* LANDING OVERLAY */}
+      <div className={`${styles.landingOverlay} ${hasTapped ? styles.landingOverlayHidden : ''}`}>
+        <div className={styles.momoOneTapWrapper}>
+          <div className={styles.steamContainer}>
+            <div className={styles.steam}></div>
+            <div className={styles.steam}></div>
+            <div className={styles.steam}></div>
+          </div>
+          <img
+            src="/momo.png"
+            alt="One Tap Momo"
+            className={styles.momoOneTap}
+            onClick={handleTap}
+          />
         </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+        <h1 className={styles.landingTitle}>One Tap Momo</h1>
+        <div className={styles.tapInstruction}>
+          <div className={styles.pulsatingCircle}></div>
+          TAP TO ORDER NOW
+        </div>
+      </div>
+
+      {/* FLYING MOMO ANIMATION */}
+      {isLaunching && (
+        <img src="/momo.png" className={styles.flyingMomo} alt="Flying Momo" />
+      )}
+
+      <section className={styles.heroSection}>
+        <img src="/momo.png" alt="Momo" className={styles.heroImage} />
+        <div className={styles.heroOverlay}></div>
+        <div className={styles.heroContent}>
+          <h1 className={styles.title}>One Tap Momo</h1>
+          <p className={styles.motto}>🚀 Hygienic | 🏠 Homely | ✨ Authentic</p>
+        </div>
+      </section>
+
+      <section className={styles.formSection}>
+        {/* SUCCESS NOTIFICATION */}
+        {showSuccess && (
+          <div className={styles.premiumSuccessCard}>
+            <div className={styles.successIconOuter}>
+              <div className={styles.successIconInner}>✔️</div>
+            </div>
+            <div className={styles.successContent}>
+              <h4 className={styles.successTitle}>Order Placed Successfully! 🥟</h4>
+              <p className={styles.successText}>We have received your request. Our chefs are already getting started! You can track your real-time delivery status here.</p>
+              <div className={styles.successActions}>
+                <a href="tel:+9779860196101" className={styles.callSupportBtn}>📞 Need Help? Call Admin</a>
+                <button onClick={() => setShowSuccess(false)} className={styles.dismissBtn}>Got it</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ACTIVE TRACKERS / HISTORY */}
+        {activeOrders.length > 0 && (
+          <div className={styles.executionSection} style={{ marginBottom: '4rem', borderBottom: '2px dashed #fed7aa', paddingBottom: '4rem' }}>
+            <h2 className={styles.executionTitle}>Track Active Orders</h2>
+
+            {activeOrders.map(order => (
+              <div key={order.id} className={styles.orderTrackerCard} style={{ marginBottom: '2rem', padding: '2rem', background: '#fffcf9', borderRadius: '24px', border: '1px solid #fed7aa' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', alignItems: 'center' }}>
+                  <div>
+                    <span style={{ fontWeight: 800, color: '#ef4444', fontSize: '1.1rem' }}>Order #{order.id}</span>
+                    <p style={{ fontSize: '0.8rem', color: '#9a3412', margin: 0 }}>{order.date}</p>
+                  </div>
+                  <span className={styles.statusBadge} style={{ background: '#fef3c7', color: '#92400e', padding: '0.4rem 1rem', borderRadius: '10px', fontWeight: 700 }}>{order.status}</span>
+                </div>
+
+                <div className={styles.statusStepper}>
+                  {['Placed', 'Preparing', 'Ready', 'Transit'].map((step, idx) => (
+                    <div key={idx} className={`${styles.statusStep} ${getStatusStep(order.status) >= idx ? styles.activeStep : ''}`}>
+                      <div className={styles.stepCircle} style={{ width: '2.5rem', height: '2.5rem' }}>{idx + 1}</div>
+                      <div className={styles.stepLabel} style={{ fontSize: '0.75rem' }}>{step}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ marginTop: '1.5rem', textAlign: 'right' }}>
+                  <a href="tel:+9779860196101" style={{ color: '#16a34a', fontWeight: 700, fontSize: '0.9rem' }}>📞 Update via Call</a>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ORDER FORM */}
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>New Order</h2>
+          <p className={styles.sectionSubtitle}>Place a new request below.</p>
+        </div>
+
+        <form className={styles.momoForm} onSubmit={handleSubmit}>
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Full Name *</label>
+            <input type="text" className={styles.input} required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>🥟 Phone Number (10 Digits) *</label>
+            <input
+              type="tel"
+              className={styles.input}
+              required
+              maxLength="10"
+              pattern="\d{10}"
+              placeholder="e.g. 9800000000"
+              value={formData.phone}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                setFormData({ ...formData, phone: val });
+              }}
             />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>🍽️ Number of Plates *</label>
+            <div className={styles.platesCounter}>
+              <button
+                type="button"
+                className={styles.counterBtn}
+                onClick={() => setFormData(prev => ({ ...prev, plates: Math.max(1, prev.plates - 1) }))}
+              >
+                -
+              </button>
+              <input
+                type="number"
+                className={styles.platesInput}
+                required
+                min="1"
+                value={formData.plates}
+                onChange={(e) => setFormData({ ...formData, plates: parseInt(e.target.value) || 1 })}
+              />
+              <button
+                type="button"
+                className={styles.counterBtn}
+                onClick={() => setFormData(prev => ({ ...prev, plates: prev.plates + 1 }))}
+              >
+                +
+              </button>
+              <div className={styles.totalBadge}>
+                Total: Rs. {formData.plates * 150}
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.inputGroup}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label className={styles.label}>Delivery Address *</label>
+              <button type="button" className={styles.locationBtn} onClick={handleGetLocation}>📍 Pin</button>
+            </div>
+            <textarea className={styles.textarea} required value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })}></textarea>
+          </div>
+
+          <button type="submit" className={styles.orderBtn}>Submit Order 🥟</button>
+        </form>
+
+        {activeOrders.length === 0 && (
+          <div className={styles.actionGroup} style={{ marginTop: '3rem' }}>
+            <a href="tel:+9779860196101" className={styles.callBtn}>📞 Call for Quick Support</a>
+          </div>
+        )}
+      </section>
+
+      <footer className={styles.footer}>
+        <p>© 2026 One Tap Momo. Homely. Hygienic. Authentic.</p>
+      </footer>
     </div>
   );
 }
