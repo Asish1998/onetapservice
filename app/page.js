@@ -263,6 +263,7 @@ export default function MomoPage() {
 
       <footer className={styles.footer}>
         <p>© 2026 One Tap Momo. Homely. Hygienic. Authentic.</p>
+        <p style={{ marginTop: '0.5rem', fontWeight: '800', color: '#b91c1c' }}>Design and Created by Ashish Khanal</p>
       </footer>
     </div>
   );
