@@ -862,3 +862,42 @@
     letter-spacing: 0.3rem;
   }
 }
+
+.trackerFooter {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: center;
+}
+
+.trackerCallBtn {
+  background: #dcfce7;
+  color: #166534;
+  padding: 0.8rem 2rem;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  border: 1px solid #bbf7d0;
+  width: 100%;
+  justify-content: center;
+}
+
+.trackerCallBtn:hover {
+  background: #22c55e;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.2);
+}
+
+@media (max-width: 480px) {
+  .trackerCallBtn {
+    padding: 1rem;
+    font-size: 1.1rem; /* Better tap target on small phones */
+  }
+}
