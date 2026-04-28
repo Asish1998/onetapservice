@@ -14,6 +14,7 @@ export default function MomoPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [hasTapped, setHasTapped] = useState(false);
   const [isLaunching, setIsLaunching] = useState(false);
+  const trackingRef = useRef(null);
 
   // Poll for status updates from the server
   useEffect(() => {
@@ -74,10 +75,34 @@ export default function MomoPage() {
         localStorage.setItem('momo_customer_phone', formData.phone); 
         setShowSuccess(true);
         setFormData({ ...formData, name: '', location: '', plates: 1 });
+        
+        // Scroll to tracking section after a short delay
+        setTimeout(() => {
+          trackingRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 1000);
+
         setTimeout(() => setShowSuccess(false), 5000);
       }
     } catch (e) {
       alert("Error placing order. Please check your connection.");
+    }
+  };
+
+  const handleCancelOrder = async (orderId) => {
+    if (confirm("Are you sure you want to cancel this order?")) {
+      try {
+        const response = await fetch(`/api/orders?id=${orderId}`, {
+          method: 'DELETE'
+        });
+        if (response.ok) {
+          // Remove from local tracking too
+          const myOrderIds = JSON.parse(localStorage.getItem('momo_my_order_ids') || '[]');
+          const updatedIds = myOrderIds.filter(id => id !== orderId);
+          localStorage.setItem('momo_my_order_ids', JSON.stringify(updatedIds));
+        }
+      } catch (e) {
+        alert("Error cancelling order.");
+      }
     }
   };
 
@@ -154,17 +179,27 @@ export default function MomoPage() {
 
         {/* ACTIVE TRACKERS / HISTORY */}
         {activeOrders.length > 0 && (
-          <div className={styles.executionSection} style={{ marginBottom: '4rem', borderBottom: '2px dashed #fed7aa', paddingBottom: '4rem' }}>
+          <div className={styles.executionSection} ref={trackingRef} style={{ marginBottom: '4rem', borderBottom: '2px dashed #fed7aa', paddingBottom: '4rem' }}>
             <h2 className={styles.executionTitle}>Track Active Orders</h2>
 
             {activeOrders.map(order => (
               <div key={order.id} className={styles.orderTrackerCard} style={{ marginBottom: '2rem', padding: '2rem', background: '#fffcf9', borderRadius: '24px', border: '1px solid #fed7aa' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', alignItems: 'center' }}>
                   <div>
-                    <span style={{ fontWeight: 800, color: '#ef4444', fontSize: '1.1rem' }}>Order #{order.id}</span>
+                    <span style={{ fontWeight: 800, color: '#16a34a', fontSize: '1.1rem' }}>Order #{order.id}</span>
                     <p style={{ fontSize: '0.8rem', color: '#9a3412', margin: 0 }}>{order.date}</p>
                   </div>
-                  <span className={styles.statusBadge} style={{ background: '#fef3c7', color: '#92400e', padding: '0.4rem 1rem', borderRadius: '10px', fontWeight: 700 }}>{order.status}</span>
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    {(order.status === 'Placed' || order.status === 'Preparing') && (
+                      <button 
+                        onClick={() => handleCancelOrder(order.id)}
+                        className={styles.cancelBtn}
+                      >
+                        Cancel
+                      </button>
+                    )}
+                    <span className={styles.statusBadge} style={{ background: '#dcfce7', color: '#166534', padding: '0.4rem 1rem', borderRadius: '10px', fontWeight: 700 }}>{order.status}</span>
+                  </div>
                 </div>
 
                 <div className={styles.statusStepper}>
@@ -174,9 +209,6 @@ export default function MomoPage() {
                       <div className={styles.stepLabel} style={{ fontSize: '0.75rem' }}>{step}</div>
                     </div>
                   ))}
-                </div>
-                <div style={{ marginTop: '1.5rem', textAlign: 'right' }}>
-                  <a href="tel:+9779860196101" style={{ color: '#16a34a', fontWeight: 700, fontSize: '0.9rem' }}>📞 Update via Call</a>
                 </div>
               </div>
             ))}
