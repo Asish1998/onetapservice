@@ -71,53 +71,66 @@
 
 @media (max-width: 768px) {
   .heroSection {
-    height: 50vh;
+    height: 45vh;
   }
   
   .title {
-    font-size: 3rem;
+    font-size: 2.8rem;
+    padding: 0 1rem;
   }
 
   .formSection {
-    margin: -4rem 1rem 3rem;
-    padding: 2rem 1.5rem;
-    border-radius: 30px;
+    margin: -6rem 0.8rem 3rem;
+    padding: 2rem 1.2rem;
+    border-radius: 24px;
+    width: auto;
+  }
+
+  .sectionTitle {
+    font-size: 2.2rem;
   }
 }
 
 @media (max-width: 480px) {
   .landingTitle {
-    font-size: 2.2rem;
+    font-size: 2rem;
+    letter-spacing: -1px;
   }
   
   .momoOneTap {
-    width: 220px;
-    height: 220px;
+    width: 200px;
+    height: 200px;
   }
   
   .momoOneTapWrapper {
-    width: 240px;
-    height: 240px;
+    width: 220px;
+    height: 220px;
   }
 
   .tapInstruction {
-    padding: 0.6rem 1.2rem;
-    font-size: 1rem;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
   }
 
   .sectionTitle {
     font-size: 1.8rem;
   }
   
+  .input, .textarea {
+    font-size: 1rem;
+    padding: 1rem;
+  }
+
   .platesCounter {
     flex-wrap: wrap;
     justify-content: center;
     width: 100%;
+    gap: 0.5rem;
   }
   
   .totalBadge {
     margin-left: 0;
-    margin-top: 1rem;
+    margin-top: 0.8rem;
     width: 100%;
     text-align: center;
   }
@@ -782,4 +795,70 @@
 @keyframes launch {
   0% { transform: translate(-50%, -50%) scale(1.5) rotate(0); left: 50%; top: 50%; opacity: 1; }
   100% { transform: translate(-50%, -50%) scale(0.2) rotate(1080deg); left: 50%; top: 120%; opacity: 0; }
+}
+
+@media (max-width: 600px) {
+  .adminContainer {
+    padding: 1rem 0.5rem;
+  }
+  
+  .adminTitle {
+    font-size: 1.6rem;
+    text-align: center;
+    width: 100%;
+  }
+
+  .adminHeader {
+    text-align: center;
+    justify-content: center;
+    margin-bottom: 2.5rem;
+  }
+  
+  .statsGrid {
+    padding: 0 0.5rem !important;
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+  
+  .statCard {
+    padding: 1.2rem;
+  }
+
+  .controlsRow {
+    padding: 0 0.5rem;
+    flex-direction: column;
+  }
+
+  .filterTabs {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    width: 100% !important;
+    overflow: visible !important;
+  }
+
+  .tab {
+    padding: 0.6rem 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .orderGrid {
+    padding: 0 0.5rem;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .orderCard {
+    padding: 1.5rem;
+  }
+
+  .vaultCard {
+    padding: 2.5rem 1.5rem;
+    border-radius: 24px;
+    width: 95%;
+  }
+
+  .vaultInput {
+    font-size: 1.2rem;
+    letter-spacing: 0.3rem;
+  }
 }
