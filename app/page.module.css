@@ -222,6 +222,14 @@
   box-shadow: 0 30px 50px -15px rgba(239, 68, 68, 0.4);
 }
 
+.orderBtn:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  opacity: 0.7;
+}
+
 .premiumSuccessCard {
   background: #f0fdf4;
   border: 4px solid #22c55e;

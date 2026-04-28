@@ -14,6 +14,7 @@ export default function MomoPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [hasTapped, setHasTapped] = useState(false);
   const [isLaunching, setIsLaunching] = useState(false);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const trackingRef = useRef(null);
   const successRef = useRef(null);
 
@@ -44,6 +45,7 @@ export default function MomoPage() {
 
   const handleGetLocation = () => {
     if (navigator.geolocation) {
+      setIsLoadingLocation(true);
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
@@ -52,9 +54,15 @@ export default function MomoPage() {
             const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`);
             const data = await response.json();
             if (data.display_name) setFormData(prev => ({ ...prev, location: data.display_name }));
-          } catch (e) { }
+          } catch (e) { 
+          } finally {
+            setIsLoadingLocation(false);
+          }
         },
-        () => alert("Error getting location.")
+        () => {
+          alert("Error getting location.");
+          setIsLoadingLocation(false);
+        }
       );
     }
   };
@@ -295,7 +303,9 @@ export default function MomoPage() {
             <textarea className={styles.textarea} required value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })}></textarea>
           </div>
 
-          <button type="submit" className={styles.orderBtn}>Submit Order 🥟</button>
+          <button type="submit" className={styles.orderBtn} disabled={isLoadingLocation}>
+            {isLoadingLocation ? 'Fetching Address... 📡' : 'Submit Order 🥟'}
+          </button>
         </form>
 
         {activeOrders.length === 0 && (
