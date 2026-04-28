@@ -189,13 +189,13 @@ export default function MomoPage() {
             <h2 className={styles.executionTitle}>Track Active Orders</h2>
 
             {activeOrders.map(order => (
-              <div key={order.id} className={styles.orderTrackerCard} style={{ marginBottom: '2rem', padding: '2rem', background: '#fffcf9', borderRadius: '24px', border: '1px solid #fed7aa' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', alignItems: 'center' }}>
-                  <div>
-                    <span style={{ fontWeight: 800, color: '#16a34a', fontSize: '1.1rem' }}>Order #{order.id}</span>
-                    <p style={{ fontSize: '0.8rem', color: '#9a3412', margin: 0 }}>{order.date}</p>
+            <div key={order.id} className={styles.orderTrackerCard}>
+                <div className={styles.trackerHeader}>
+                  <div className={styles.trackerIdSection}>
+                    <span className={styles.orderNumber}>Order #{order.id}</span>
+                    <p className={styles.orderDateLabel}>{order.date}</p>
                   </div>
-                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                  <div className={styles.trackerActions}>
                     {(order.status === 'Placed' || order.status === 'Preparing') && (
                       <button 
                         onClick={() => handleCancelOrder(order.id)}
@@ -204,7 +204,7 @@ export default function MomoPage() {
                         Cancel
                       </button>
                     )}
-                    <span className={styles.statusBadge} style={{ background: '#dcfce7', color: '#166534', padding: '0.4rem 1rem', borderRadius: '10px', fontWeight: 700 }}>{order.status}</span>
+                    <span className={styles.statusBadge}>{order.status}</span>
                   </div>
                 </div>
 

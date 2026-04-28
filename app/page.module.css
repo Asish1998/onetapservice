@@ -393,16 +393,88 @@
   box-shadow: 0 0 20px rgba(22, 163, 74, 0.4);
 }
 
+.orderTrackerCard {
+  margin-bottom: 2rem;
+  padding: 2.5rem;
+  background: #fffcf9;
+  border-radius: 28px;
+  border: 1px solid #fed7aa;
+  box-shadow: 0 10px 25px -5px rgba(74, 52, 46, 0.05);
+}
+
+.trackerHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2.5rem;
+  gap: 1rem;
+}
+
+.orderNumber {
+  font-weight: 900;
+  color: #16a34a;
+  font-size: 1.2rem;
+  letter-spacing: -0.5px;
+}
+
+.orderDateLabel {
+  font-size: 0.85rem;
+  color: #9a3412;
+  opacity: 0.7;
+  margin: 0;
+}
+
+.trackerActions {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+}
+
+.statusBadge {
+  background: #dcfce7;
+  color: #166534;
+  padding: 0.5rem 1.2rem;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.1);
+  white-space: nowrap;
+}
+
 .cancelBtn {
-  background: #fee2e2;
-  color: #b91c1c;
-  border: 1px solid #fecaca;
-  padding: 0.4rem 0.8rem;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 700;
+  background: #fff1f2;
+  color: #e11d48;
+  border: 1px solid #fecdd3;
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 800;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .orderTrackerCard {
+    padding: 1.5rem;
+  }
+  
+  .trackerHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.2rem;
+  }
+  
+  .trackerActions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .cancelBtn, .statusBadge {
+    flex: 1;
+    text-align: center;
+    justify-content: center;
+  }
 }
 
 .cancelBtn:hover {
