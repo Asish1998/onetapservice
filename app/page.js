@@ -15,6 +15,7 @@ export default function MomoPage() {
   const [hasTapped, setHasTapped] = useState(false);
   const [isLaunching, setIsLaunching] = useState(false);
   const trackingRef = useRef(null);
+  const successRef = useRef(null);
 
   // Poll for status updates from the server
   useEffect(() => {
@@ -76,12 +77,17 @@ export default function MomoPage() {
         setShowSuccess(true);
         setFormData({ ...formData, name: '', location: '', plates: 1 });
         
+        // Scroll to success message immediately
+        setTimeout(() => {
+          successRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+
         // Scroll to tracking section after a short delay
         setTimeout(() => {
           trackingRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }, 1000);
+        }, 3000);
 
-        setTimeout(() => setShowSuccess(false), 5000);
+        setTimeout(() => setShowSuccess(false), 8000);
       }
     } catch (e) {
       alert("Error placing order. Please check your connection.");
@@ -162,7 +168,7 @@ export default function MomoPage() {
       <section className={styles.formSection}>
         {/* SUCCESS NOTIFICATION */}
         {showSuccess && (
-          <div className={styles.premiumSuccessCard}>
+          <div className={styles.premiumSuccessCard} ref={successRef}>
             <div className={styles.successIconOuter}>
               <div className={styles.successIconInner}>✔️</div>
             </div>
