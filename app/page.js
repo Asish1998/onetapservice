@@ -235,6 +235,13 @@ export default function MomoPage() {
           </div>
         )}
 
+        {/* CURRENTLY SERVING HIGHLIGHT */}
+        <div className={styles.servingBadgeWrapper}>
+          <span className={styles.servingBadge}>🎯 Currently Serving</span>
+          <h2 className={styles.servingTitle}>Steamed Chicken Momo</h2>
+          <p className={styles.servingPrice}>Special Price: Rs. 150 / Plate</p>
+        </div>
+
         {/* ORDER FORM */}
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>New Order</h2>
@@ -307,47 +314,6 @@ export default function MomoPage() {
             {isLoadingLocation ? 'Fetching Address... 📡' : 'Submit Order 🥟'}
           </button>
         </form>
-
-        {/* RECIPE SECTION */}
-        <div className={styles.sectionHeader} style={{ marginTop: '5rem' }}>
-          <h2 className={styles.sectionTitle}>Our Secret Recipe</h2>
-          <p className={styles.sectionSubtitle}>Wanna try at home? Here is how we make the magic happen.</p>
-        </div>
-
-        <div className={styles.recipeCard}>
-          <div className={styles.recipeHeader}>
-            <span className={styles.recipeBadge}>Chef's Choice 👨‍🍳</span>
-            <h3>Authentic Chicken Momo</h3>
-          </div>
-          
-          <div className={styles.recipeBody}>
-            <div className={styles.ingredientList}>
-              <h4>Ingredients</h4>
-              <ul>
-                <li>500g Minced Chicken (Keema)</li>
-                <li>2 Large Onions (Finely chopped)</li>
-                <li>2 tbsp Ginger-Garlic Paste</li>
-                <li>1 tsp Cumin Powder</li>
-                <li>Fresh Coriander Leaves</li>
-                <li>3 tbsp Melted Butter (for juiciness!)</li>
-                <li>All-purpose Flour & Water (for dough)</li>
-              </ul>
-            </div>
-            
-            <div className={styles.methodList}>
-              <h4>The Method</h4>
-              <ol>
-                <li><strong>The Dough:</strong> Mix flour with a pinch of salt and water. Knead into a soft dough and let it rest for 30 mins.</li>
-                <li><strong>The Filling:</strong> Mix minced chicken with onions, spices, ginger-garlic paste, and melted butter.</li>
-                <li><strong>The Wrapping:</strong> Roll small dough balls into thin circles. Place 1 tsp filling and fold into your favorite shape.</li>
-                <li><strong>The Steam:</strong> Grease your steamer and steam the momos for 10-12 minutes until they look translucent.</li>
-              </ol>
-            </div>
-          </div>
-          <div className={styles.recipeFooter}>
-            Pro Tip: Serve hot with our special spicy tomato chutney! 🌶️
-          </div>
-        </div>
 
         {activeOrders.length === 0 && (
           <div className={styles.actionGroup} style={{ marginTop: '3rem' }}>
