@@ -1,68 +1,67 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-
-const DATA_PATH = path.join(process.cwd(), 'orders.json');
-
-// Helper to read orders
-const readOrders = () => {
-  try {
-    if (!fs.existsSync(DATA_PATH)) return [];
-    const data = fs.readFileSync(DATA_PATH, 'utf8');
-    return JSON.parse(data);
-  } catch (e) {
-    console.error('Error reading orders:', e);
-    return [];
-  }
-};
-
-// Helper to write orders
-const writeOrders = (orders) => {
-  try {
-    fs.writeFileSync(DATA_PATH, JSON.stringify(orders, null, 2), 'utf8');
-  } catch (e) {
-    console.error('Error writing orders:', e);
-  }
-};
+import { supabase } from '@/lib/supabase';
 
 export async function GET() {
-  const orders = readOrders();
-  return NextResponse.json(orders);
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*')
+    .order('id', { ascending: false });
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  return NextResponse.json(data);
 }
 
 export async function POST(req) {
   try {
     const newOrder = await req.json();
-    const orders = readOrders();
-    const updatedOrders = [newOrder, ...orders];
-    writeOrders(updatedOrders);
-    return NextResponse.json({ success: true, order: newOrder });
+    const { data, error } = await supabase
+      .from('orders')
+      .insert([newOrder])
+      .select();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json({ success: true, order: data[0] });
   } catch (e) {
-    return NextResponse.json({ success: false, error: e.message }, { status: 500 });
+    return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
 
 export async function PATCH(req) {
   try {
     const { id, status } = await req.json();
-    const orders = readOrders();
-    const updatedOrders = orders.map(o => o.id === id ? { ...o, status } : o);
-    writeOrders(updatedOrders);
+    const { error } = await supabase
+      .from('orders')
+      .update({ status })
+      .eq('id', id);
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
     return NextResponse.json({ success: true });
   } catch (e) {
-    return NextResponse.json({ success: false, error: e.message }, { status: 500 });
+    return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
 
 export async function DELETE(req) {
   try {
     const { searchParams } = new URL(req.url);
-    const id = parseInt(searchParams.get('id'));
-    const orders = readOrders();
-    const updatedOrders = orders.filter(o => o.id !== id);
-    writeOrders(updatedOrders);
+    const id = searchParams.get('id');
+    
+    const { error } = await supabase
+      .from('orders')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
     return NextResponse.json({ success: true });
   } catch (e) {
-    return NextResponse.json({ success: false, error: e.message }, { status: 500 });
+    return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
