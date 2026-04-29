@@ -7,7 +7,7 @@ export default function SaaSLandingPage() {
   const router = useRouter();
 
   return (
-    <div className={styles.momoContainer}>
+    <div className={styles.saasContainer}>
       <header className={styles.saasHeader}>
         <div className={styles.saasLogo}>🥟 OneTapMomo Platform</div>
         <button onClick={() => router.push('/admin')} className={styles.loginBtn}>Login / Register</button>
@@ -15,7 +15,9 @@ export default function SaaSLandingPage() {
 
       <section className={styles.saasHero}>
         <div className={styles.heroText}>
-          <h1 className={styles.saasTitle}>Take Your Momo Business Online in 1-Tap!</h1>
+          <h1 className={styles.saasTitle}>
+            Take Your Momo Business Online in <span>1-Tap!</span>
+          </h1>
           <p className={styles.saasSubtitle}>Get a dedicated ordering page for your business, track live orders on a professional dashboard, and serve your hungry customers better.</p>
           <div className={styles.saasHeroActions}>
             <button onClick={() => router.push('/admin')} className={styles.registerBtn}>Register Your Business</button>
