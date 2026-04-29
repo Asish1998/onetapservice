@@ -153,7 +153,7 @@ export default function MomoPage() {
           />
         </div>
         <h1 className={styles.landingTitle}>One Tap Momo</h1>
-        <div className={styles.tapInstruction}>
+        <div className={styles.tapInstruction} onClick={handleTap} style={{ cursor: 'pointer' }}>
           <div className={styles.pulsatingCircle}></div>
           TAP TO ORDER NOW
         </div>
@@ -321,6 +321,11 @@ export default function MomoPage() {
           </div>
         )}
       </section>
+
+      {/* ADMIN SHORTCUT */}
+      <a href="/admin" className={styles.adminFloater} title="Run as admin for your business">
+        A
+      </a>
 
       <footer className={styles.footer}>
         <p>© 2026 One Tap Momo. Homely. Hygienic. Authentic.</p>

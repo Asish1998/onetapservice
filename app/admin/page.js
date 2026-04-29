@@ -7,17 +7,79 @@ export default function AdminPage() {
   const [orders, setOrders] = useState([]);
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('All');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [vaultInput, setVaultInput] = useState('');
   
-  // You can change this code to your preferred password
-  const VAULT_CODE = "1234"; 
+  // Auth states
+  const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
+  const [adminUser, setAdminUser] = useState(null);
+  const [authForm, setAuthForm] = useState({ username: '', password: '', businessName: '' });
+  const [authError, setAuthError] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+
+  // Check for saved session on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('momo_admin_session');
+    if (saved) {
+      try {
+        setAdminUser(JSON.parse(saved));
+      } catch (e) {}
+    }
+  }, []);
+
+  const handleAuth = async () => {
+    setAuthError('');
+    setAuthLoading(true);
+
+    if (!authForm.username || !authForm.password) {
+      setAuthError('Please fill all required fields.');
+      setAuthLoading(false);
+      return;
+    }
+
+    if (authMode === 'register' && !authForm.businessName) {
+      setAuthError('Business name is required for registration.');
+      setAuthLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: authMode,
+          username: authForm.username,
+          password: authForm.password,
+          businessName: authForm.businessName
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setAuthError(data.error || 'Something went wrong.');
+        setAuthLoading(false);
+        return;
+      }
+
+      // Success
+      setAdminUser(data.admin);
+      localStorage.setItem('momo_admin_session', JSON.stringify(data.admin));
+    } catch (e) {
+      setAuthError('Network error. Please try again.');
+    }
+    setAuthLoading(false);
+  };
+
+  const handleLogout = () => {
+    setAdminUser(null);
+    localStorage.removeItem('momo_admin_session');
+    setAuthForm({ username: '', password: '', businessName: '' });
+  };
 
   const loadOrders = async () => {
     try {
       const response = await fetch('/api/orders');
       const savedOrders = await response.json();
-      // Ensure we have an array
       if (Array.isArray(savedOrders)) {
         setOrders(savedOrders);
       }
@@ -27,10 +89,12 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    loadOrders();
-    const interval = setInterval(loadOrders, 3000);
-    return () => clearInterval(interval);
-  }, []);
+    if (adminUser) {
+      loadOrders();
+      const interval = setInterval(loadOrders, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [adminUser]);
 
   const updateStatus = async (orderId, newStatus) => {
     try {
@@ -84,47 +148,74 @@ export default function AdminPage() {
     ready: orders.filter(o => o.status === 'Ready').length
   };
 
-  if (!isAuthenticated) {
+  // --- AUTH SCREEN ---
+  if (!adminUser) {
     return (
       <div className={styles.vaultOverlay}>
         <div className={styles.vaultCard}>
-          <span className={styles.vaultIcon}>🔐</span>
-          <h2>Admin Vault</h2>
-          <p>Please enter the security code to access the dashboard.</p>
+          <span className={styles.vaultIcon}>{authMode === 'login' ? '🔐' : '🚀'}</span>
+          <h2>{authMode === 'login' ? 'Admin Login' : 'Register Business'}</h2>
+          <p>{authMode === 'login' ? 'Sign in to manage your orders.' : 'Create your admin account to get started.'}</p>
+
+          {authError && <div className={styles.authError}>{authError}</div>}
+
+          {authMode === 'register' && (
+            <input 
+              type="text" 
+              className={styles.vaultInput}
+              style={{ letterSpacing: 'normal', fontSize: '1rem', marginBottom: '1rem' }}
+              value={authForm.businessName}
+              onChange={(e) => setAuthForm({ ...authForm, businessName: e.target.value })}
+              placeholder="Business Name (e.g. One Tap Momo)"
+            />
+          )}
+
+          <input 
+            type="text" 
+            className={styles.vaultInput}
+            style={{ letterSpacing: 'normal', fontSize: '1rem', marginBottom: '1rem' }}
+            value={authForm.username}
+            onChange={(e) => setAuthForm({ ...authForm, username: e.target.value })}
+            placeholder="Username"
+          />
+
           <input 
             type="password" 
             className={styles.vaultInput}
-            value={vaultInput}
-            onChange={(e) => setVaultInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && vaultInput === VAULT_CODE) setIsAuthenticated(true);
-            }}
-            placeholder="Enter Code"
-            autoFocus
+            style={{ letterSpacing: '0.3rem', fontSize: '1rem' }}
+            value={authForm.password}
+            onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleAuth(); }}
+            placeholder="Password"
           />
+
           <button 
             className={styles.vaultBtn}
-            onClick={() => {
-              if (vaultInput === VAULT_CODE) {
-                setIsAuthenticated(true);
-              } else {
-                alert("Incorrect Vault Code");
-              }
-            }}
+            onClick={handleAuth}
+            disabled={authLoading}
           >
-            Access Dashboard
+            {authLoading ? 'Please wait...' : (authMode === 'login' ? 'Sign In' : 'Create Account')}
           </button>
+
+          <p className={styles.authToggle}>
+            {authMode === 'login' ? (
+              <>Don&apos;t have an account? <button onClick={() => { setAuthMode('register'); setAuthError(''); }}>Register</button></>
+            ) : (
+              <>Already registered? <button onClick={() => { setAuthMode('login'); setAuthError(''); }}>Sign In</button></>
+            )}
+          </p>
         </div>
       </div>
     );
   }
 
+  // --- DASHBOARD ---
   return (
     <div className={styles.adminContainer}>
       {/* Sidebar */}
       <aside className={styles.sidebar}>
         <div className={styles.logo}>
-          <span>🥟</span> One Tap Admin
+          <span>🥟</span> {adminUser.businessName || 'One Tap Admin'}
         </div>
         <nav className={styles.nav}>
           <div className={`${styles.navItem} ${styles.navItemActive}`}>
@@ -136,6 +227,9 @@ export default function AdminPage() {
           <div className={styles.navItem} onClick={() => loadOrders()}>
             <span>🔄</span> Refresh Data
           </div>
+          <div className={styles.navItem} onClick={handleLogout} style={{ marginTop: 'auto' }}>
+            <span>🚪</span> Logout
+          </div>
         </nav>
       </aside>
 
@@ -143,8 +237,8 @@ export default function AdminPage() {
       <main className={styles.mainContent}>
         <header className={styles.adminHeader}>
           <div>
-            <h1 className={styles.adminTitle}>Orders Management</h1>
-            <p style={{ color: '#64748b', fontWeight: 500 }}>Monitor and manage real-time momo requests.</p>
+            <h1 className={styles.adminTitle}>{adminUser.businessName || 'Orders Management'}</h1>
+            <p style={{ color: '#64748b', fontWeight: 500 }}>Welcome back, <strong>{adminUser.username}</strong>. Monitor and manage real-time orders.</p>
           </div>
         </header>
 

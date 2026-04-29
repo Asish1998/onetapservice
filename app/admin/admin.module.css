@@ -452,3 +452,35 @@
   .filterTabs { width: 100%; overflow-x: auto; }
   .statsGrid { grid-template-columns: 1fr; }
 }
+
+.authError {
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 0.8rem 1.2rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  border: 1px solid #fecaca;
+}
+
+.authToggle {
+  margin-top: 2rem;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.authToggle button {
+  background: none;
+  border: none;
+  color: #ef4444;
+  font-weight: 800;
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-decoration: underline;
+}
+
+.vaultBtn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
