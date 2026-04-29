@@ -1228,21 +1228,76 @@
   justify-content: center;
   align-items: center;
   position: relative;
+  perspective: 1000px; /* For 3D floating feel */
+}
+
+.orbitContainer {
+  position: relative;
+  width: 480px;
+  height: 480px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform-style: preserve-3d;
 }
 
 .heroMomoFloat {
-  width: 480px;
-  height: 480px;
+  width: 350px;
+  height: 350px;
   object-fit: cover;
   border-radius: 50%;
-  box-shadow: 0 40px 80px rgba(225, 29, 72, 0.15);
+  box-shadow: 0 40px 80px rgba(225, 29, 72, 0.2);
   animation: floatMomo 5s ease-in-out infinite;
-  border: 12px solid white;
+  border: 10px solid white;
+  position: relative;
+  z-index: 2;
+}
+
+/* Antigravity Orbiting Elements */
+.orbitTrack {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 2px dashed rgba(253, 186, 116, 0.4);
+  transform-style: preserve-3d;
+  animation: orbitRotate linear infinite;
+  z-index: 1;
+}
+
+.orbitTrack1 { width: 450px; height: 450px; animation-duration: 15s; }
+.orbitTrack2 { width: 550px; height: 550px; animation-duration: 25s; animation-direction: reverse; }
+.orbitTrack3 { width: 680px; height: 680px; animation-duration: 35s; border-color: rgba(225, 29, 72, 0.15); }
+
+.orbitMomo {
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  margin-left: -30px;
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 50%;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+  border: 4px solid white;
+  animation: antiGravitySpin 4s linear infinite;
+}
+
+@keyframes orbitRotate {
+  0% { transform: translate(-50%, -50%) rotate(0deg) rotateX(60deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg) rotateX(60deg); }
+}
+
+@keyframes antiGravitySpin {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.2); }
+  100% { transform: rotate(360deg) scale(1); }
 }
 
 @keyframes floatMomo {
   0% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-25px) rotate(2deg); }
+  50% { transform: translateY(-30px) rotate(3deg); }
   100% { transform: translateY(0) rotate(0deg); }
 }
 

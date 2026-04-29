@@ -23,7 +23,20 @@ export default function SaaSLandingPage() {
           </div>
         </div>
         <div className={styles.heroGraphic}>
-           <img src="/momo.png" alt="Momo Dashboard" className={styles.heroMomoFloat} />
+           <div className={styles.orbitContainer}>
+             <img src="/momo.png" alt="Momo Dashboard" className={styles.heroMomoFloat} />
+             
+             {/* Orbiting Momos (Antigravity feature) */}
+             <div className={`${styles.orbitTrack} ${styles.orbitTrack1}`}>
+               <img src="/momo.png" className={styles.orbitMomo} alt="Orbit" />
+             </div>
+             <div className={`${styles.orbitTrack} ${styles.orbitTrack2}`}>
+               <img src="/momo.png" className={styles.orbitMomo} alt="Orbit" />
+             </div>
+             <div className={`${styles.orbitTrack} ${styles.orbitTrack3}`}>
+               <img src="/momo.png" className={styles.orbitMomo} alt="Orbit" />
+             </div>
+           </div>
         </div>
       </section>
 
