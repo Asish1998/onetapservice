@@ -11,6 +11,8 @@ export default function BusinessOrderPage() {
   const [formData, setFormData] = useState({ name: '', phone: '', location: '', plates: 1 });
   const [activeOrders, setActiveOrders] = useState([]);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [successTitle, setSuccessTitle] = useState('Order Placed Successfully! 🥟');
+  const [successText, setSuccessText] = useState('We have received your request. Our chefs are already getting started!');
   const [hasTapped, setHasTapped] = useState(false);
   const [isLaunching, setIsLaunching] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
@@ -56,6 +58,26 @@ export default function BusinessOrderPage() {
         const response = await fetch(`/api/orders?admin_id=${adminId}&ids=${myOrderIds.join(',')}`);
         const orders = await response.json();
         if (Array.isArray(orders)) {
+          const completedOrders = orders.filter(o => o.status === 'Received');
+          const acknowledged = JSON.parse(localStorage.getItem('momo_acknowledged') || '[]');
+          let newlyCompleted = false;
+          
+          completedOrders.forEach(co => {
+            if (!acknowledged.includes(co.id)) {
+               newlyCompleted = true;
+               acknowledged.push(co.id);
+            }
+          });
+          
+          if (newlyCompleted) {
+            localStorage.setItem('momo_acknowledged', JSON.stringify(acknowledged));
+            setSuccessTitle('Order Arrived & Completed! ✅');
+            setSuccessText('Your momo request is marked as completed by the vendor. Enjoy your authentic meal!');
+            setShowSuccess(true);
+            setTimeout(() => { successRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
+            setTimeout(() => setShowSuccess(false), 8000);
+          }
+
           const myActiveOrders = orders.filter(o => o.status !== 'Received');
           setActiveOrders(myActiveOrders);
         }
@@ -97,6 +119,8 @@ export default function BusinessOrderPage() {
       if (response.ok) {
         const myOrderIds = JSON.parse(localStorage.getItem('momo_my_order_ids') || '[]');
         localStorage.setItem('momo_my_order_ids', JSON.stringify([newOrder.id, ...myOrderIds]));
+        setSuccessTitle('Order Placed Successfully! 🥟');
+        setSuccessText('We have received your request. Our chefs are already getting started!');
         setShowSuccess(true);
         setFormData({ ...formData, name: '', location: '', plates: 1 });
         setTimeout(() => { successRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
@@ -111,10 +135,21 @@ export default function BusinessOrderPage() {
   const handleCancelOrder = async (orderId) => {
     if (confirm("Are you sure you want to cancel this order?")) {
       try {
-        const response = await fetch(`/api/orders?id=${orderId}`, { method: 'DELETE' });
+        const response = await fetch(`/api/orders?id=${orderId}`, { 
+          method: 'DELETE',
+          headers: {
+            'x-dashboard-secret': 'secure-momo-dashboard'
+          }
+        });
         if (response.ok) {
           const myOrderIds = JSON.parse(localStorage.getItem('momo_my_order_ids') || '[]');
           localStorage.setItem('momo_my_order_ids', JSON.stringify(myOrderIds.filter(id => id !== orderId)));
+          setActiveOrders(prev => prev.filter(o => o.id !== orderId));
+          setSuccessTitle('Order Cancelled 🚫');
+          setSuccessText('Your order has been successfully cancelled.');
+          setShowSuccess(true);
+          setTimeout(() => { successRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
+          setTimeout(() => setShowSuccess(false), 5000);
         }
       } catch (e) { alert("Error cancelling order."); }
     }
@@ -272,8 +307,8 @@ export default function BusinessOrderPage() {
               <div className={styles.successIconInner}>✔️</div>
             </div>
             <div className={styles.successContent}>
-              <h4 className={styles.successTitle}>Order Placed Successfully! 🥟</h4>
-              <p className={styles.successText}>We have received your request. Our chefs are already getting started!</p>
+              <h4 className={styles.successTitle}>{successTitle}</h4>
+              <p className={styles.successText}>{successText}</p>
               <div className={styles.successActions}>
                 <a href={`tel:${businessPhone}`} className={styles.callSupportBtn}>📞 Need Help? Call</a>
                 <button onClick={() => setShowSuccess(false)} className={styles.dismissBtn}>Got it</button>
