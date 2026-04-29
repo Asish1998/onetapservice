@@ -279,6 +279,18 @@ export default function AdminPage() {
           <div>
             <h1 className={styles.adminTitle}>{adminUser.businessName || 'Orders Management'}</h1>
             <p style={{ color: '#64748b', fontWeight: 500 }}>Welcome back, <strong>{adminUser.username}</strong>. Monitor and manage real-time orders.</p>
+            <div style={{ marginTop: '1rem', display: 'inline-flex', alignItems: 'center', background: '#f8fafc', padding: '0.5rem 1rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+              <span style={{ fontSize: '0.9rem', color: '#64748b', marginRight: '0.5rem' }}>Your Ordering Link:</span>
+              <strong style={{ fontSize: '0.9rem', color: '#0f172a', marginRight: '1rem' }}>
+                /order/{adminUser.username}
+              </strong>
+              <button 
+                onClick={() => copyToClipboard(typeof window !== 'undefined' ? `${window.location.origin}/order/${adminUser.username}` : `/order/${adminUser.username}`)}
+                style={{ background: '#e2e8f0', border: 'none', padding: '0.3rem 0.8rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '600' }}
+              >
+                Copy Link
+              </button>
+            </div>
           </div>
         </header>
 
