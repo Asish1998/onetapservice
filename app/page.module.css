@@ -1088,3 +1088,213 @@
     right: 1.5rem;
   }
 }
+
+/* SAAS LANDING PAGE STYLES */
+.saasHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 3rem;
+  background: white;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.saasLogo {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #b91c1c;
+}
+
+.loginBtn {
+  background: transparent;
+  color: #0f172a;
+  border: 2px solid #e2e8f0;
+  padding: 0.6rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.loginBtn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.saasHero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5rem 3rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: 70vh;
+}
+
+.heroText {
+  flex: 1;
+  padding-right: 4rem;
+}
+
+.saasTitle {
+  font-size: 3.5rem;
+  font-weight: 900;
+  color: #0f172a;
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
+}
+
+.saasSubtitle {
+  font-size: 1.3rem;
+  color: #64748b;
+  line-height: 1.6;
+  margin-bottom: 2.5rem;
+}
+
+.saasHeroActions {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.registerBtn {
+  background: #b91c1c;
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 800;
+  border-radius: 14px;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(185, 28, 28, 0.3);
+  transition: all 0.3s;
+}
+
+.registerBtn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 35px rgba(185, 28, 28, 0.4);
+}
+
+.learnMoreBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0f172a;
+  text-decoration: none;
+  font-weight: 700;
+  padding: 1rem 2rem;
+  background: #f1f5f9;
+  border-radius: 14px;
+  transition: all 0.2s;
+}
+
+.learnMoreBtn:hover {
+  background: #e2e8f0;
+}
+
+.heroGraphic {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.heroMomoFloat {
+  width: 400px;
+  height: 400px;
+  object-fit: cover;
+  border-radius: 50%;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.15);
+  animation: floatMomo 4s ease-in-out infinite;
+}
+
+@keyframes floatMomo {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+  100% { transform: translateY(0); }
+}
+
+.saasFeatures {
+  background: white;
+  padding: 6rem 3rem;
+  text-align: center;
+}
+
+.featuresHeading {
+  font-size: 2.5rem;
+  color: #0f172a;
+  margin-bottom: 4rem;
+}
+
+.featureGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.featureCard {
+  padding: 2.5rem;
+  background: #f8fafc;
+  border-radius: 24px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s;
+}
+
+.featureCard:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+}
+
+.featureCard h3 {
+  font-size: 1.4rem;
+  color: #1e293b;
+  margin-bottom: 1rem;
+}
+
+.featureCard p {
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.saasFooter {
+  background: #0f172a;
+  color: #94a3b8;
+  padding: 3rem;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .saasHeader {
+    padding: 1rem 1.5rem;
+  }
+  .saasLogo {
+    font-size: 1.2rem;
+  }
+  .loginBtn {
+    padding: 0.5rem 1rem;
+  }
+  .saasHero {
+    flex-direction: column;
+    padding: 3rem 1.5rem;
+    text-align: center;
+  }
+  .heroText {
+    padding-right: 0;
+    margin-bottom: 3rem;
+  }
+  .saasTitle {
+    font-size: 2.5rem;
+  }
+  .saasHeroActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .heroMomoFloat {
+    width: 250px;
+    height: 250px;
+  }
+  .featureGrid {
+    grid-template-columns: 1fr;
+  }
+}
