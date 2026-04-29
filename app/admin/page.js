@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import styles from './admin.module.css';
 
 export default function AdminPage() {
   const [orders, setOrders] = useState([]);
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('All');
+  const [adminView, setAdminView] = useState('orders'); // 'orders' or 'analytics'
   
   // Auth states
   const [authMode, setAuthMode] = useState('login');
@@ -14,6 +16,10 @@ export default function AdminPage() {
   const [authForm, setAuthForm] = useState({ username: '', password: '', businessName: '', phone: '' });
   const [authError, setAuthError] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
+
+  // AI Voice Copilot states
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const lastOrderId = useRef(-1);
 
   // Check for saved session on mount
   useEffect(() => {
@@ -82,6 +88,20 @@ export default function AdminPage() {
       const response = await fetch(`/api/orders?admin_id=${adminUser.id}`);
       const savedOrders = await response.json();
       if (Array.isArray(savedOrders)) {
+        if (savedOrders.length > 0) {
+          const newestOrderId = Number(savedOrders[0].id);
+          // Check for new orders to trigger Voice Copilot
+          if (lastOrderId.current !== -1 && newestOrderId > lastOrderId.current && voiceEnabled) {
+             if ('speechSynthesis' in window) {
+               window.speechSynthesis.cancel(); // Clear browser voice queue bug
+               const plates = savedOrders[0].plates;
+               const name = savedOrders[0].name;
+               const msg = new SpeechSynthesisUtterance(`New order alert! ${plates} plates of momo requested by ${name}.`);
+               window.speechSynthesis.speak(msg);
+             }
+          }
+          lastOrderId.current = Math.max(lastOrderId.current, newestOrderId);
+        }
         setOrders(savedOrders);
       }
     } catch (e) {
@@ -95,7 +115,7 @@ export default function AdminPage() {
       const interval = setInterval(loadOrders, 3000);
       return () => clearInterval(interval);
     }
-  }, [adminUser]);
+  }, [adminUser, voiceEnabled]);
 
   const updateStatus = async (orderId, newStatus) => {
     try {
@@ -143,8 +163,35 @@ export default function AdminPage() {
     total: orders.length,
     revenue: orders.reduce((acc, o) => acc + (o.plates * 200), 0),
     active: orders.filter(o => o.status !== 'Received').length,
-    ready: orders.filter(o => o.status === 'Ready').length
+    ready: orders.filter(o => o.status === 'Ready').length,
+    completed: orders.filter(o => o.status === 'Received').length
   };
+
+  // BI Calculations
+  const pieData = [
+    { name: 'Completed', value: stats.completed },
+    { name: 'Ready', value: stats.ready },
+    { name: 'Preparing', value: orders.filter(o => o.status === 'In Progress').length },
+    { name: 'Placed (New)', value: orders.filter(o => o.status === 'Placed').length }
+  ].filter(d => d.value > 0);
+
+  const colors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'];
+
+  const hourCounts = {};
+  orders.forEach(o => {
+     if(o.date) {
+        try {
+           const d = new Date(o.date);
+           const hr = d.getHours();
+           const hrStr = hr === 0 ? '12 AM' : hr < 12 ? `${hr} AM` : hr === 12 ? '12 PM' : `${hr-12} PM`;
+           hourCounts[hrStr] = (hourCounts[hrStr] || 0) + 1;
+        }catch(e){}
+     }
+  });
+  const barData = Object.keys(hourCounts).map(hr => ({
+     time: hr,
+     orders: hourCounts[hr]
+  }));
 
   // --- AUTH SCREEN ---
   if (!adminUser) {
@@ -258,8 +305,11 @@ export default function AdminPage() {
           <span>🥟</span> {adminUser.businessName || 'One Tap Admin'}
         </div>
         <nav className={styles.nav}>
-          <div className={`${styles.navItem} ${styles.navItemActive}`}>
-            <span>📊</span> Dashboard
+          <div className={`${styles.navItem} ${adminView === 'orders' ? styles.navItemActive : ''}`} onClick={() => setAdminView('orders')}>
+            <span>📋</span> Live Orders
+          </div>
+          <div className={`${styles.navItem} ${adminView === 'analytics' ? styles.navItemActive : ''}`} onClick={() => setAdminView('analytics')}>
+            <span>📊</span> Analytics
           </div>
           <div className={styles.navItem} onClick={() => window.open(`/order/${adminUser.username}`, '_blank')}>
             <span>🌐</span> View Site
@@ -275,7 +325,7 @@ export default function AdminPage() {
 
       {/* Main Content */}
       <main className={`${styles.mainContent} ${!isApproved ? styles.blurredContent : ''}`}>
-        <header className={styles.adminHeader}>
+        <header className={styles.adminHeader} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <h1 className={styles.adminTitle}>{adminUser.businessName || 'Orders Management'}</h1>
             <p style={{ color: '#64748b', fontWeight: 500 }}>Welcome back, <strong>{adminUser.username}</strong>. Monitor and manage real-time orders.</p>
@@ -291,6 +341,34 @@ export default function AdminPage() {
                 Copy Link
               </button>
             </div>
+          </div>
+          
+          <div style={{ background: voiceEnabled ? '#fef2f2' : '#f8fafc', padding: '1rem', borderRadius: '16px', border: `2px solid ${voiceEnabled ? '#fecaca' : '#e2e8f0'}`, textAlign: 'center' }}>
+            <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 700, marginBottom: '0.5rem' }}>AI Kitchen Copilot</div>
+            <button 
+              onClick={() => {
+                if (!voiceEnabled && 'speechSynthesis' in window) {
+                   const msg = new SpeechSynthesisUtterance("Voice copilot activated.");
+                   window.speechSynthesis.speak(msg);
+                }
+                setVoiceEnabled(!voiceEnabled);
+              }}
+              style={{
+                background: voiceEnabled ? '#ef4444' : '#94a3b8',
+                color: 'white',
+                border: 'none',
+                padding: '0.6rem 1.2rem',
+                borderRadius: '12px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+            >
+              <span style={{ fontSize: '1.2rem' }}>{voiceEnabled ? '🔊' : '🔇'}</span> {voiceEnabled ? 'Voice On' : 'Voice Off'}
+            </button>
           </div>
         </header>
 
@@ -313,8 +391,34 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <div className={styles.controlsRow}>
-          <div className={styles.searchWrapper}>
+        {adminView === 'analytics' ? (
+          <div style={{ padding: '2rem', background: 'white', borderRadius: '24px', border: '1px solid #e2e8f0', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
+             <h2 style={{ marginBottom: '2rem', color: '#0f172a' }}>Business Intelligence Dashboard</h2>
+             
+             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '3rem' }}>
+                <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+                  <h3 style={{ fontSize: '1.1rem', color: '#475569', marginBottom: '1.5rem' }}>Order Status Distribution</h3>
+                  <div style={{ width: '100%', height: '300px' }}>
+                    <ResponsiveContainer>
+                      <PieChart>
+                        <Pie data={pieData} innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value">
+                          {pieData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                        <Legend verticalAlign="bottom" height={36}/>
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+             </div>
+          </div>
+        ) : (
+          <>
+            <div className={styles.controlsRow}>
+              <div className={styles.searchWrapper}>
             <span className={styles.searchIcon}>🔍</span>
             <input 
               type="text" 
@@ -396,6 +500,8 @@ export default function AdminPage() {
             ))
           )}
         </div>
+        </>
+        )}
       </main>
     </div>
   );
