@@ -9,9 +9,9 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('All');
   
   // Auth states
-  const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
+  const [authMode, setAuthMode] = useState('login');
   const [adminUser, setAdminUser] = useState(null);
-  const [authForm, setAuthForm] = useState({ username: '', password: '', businessName: '' });
+  const [authForm, setAuthForm] = useState({ username: '', password: '', businessName: '', phone: '' });
   const [authError, setAuthError] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
 
@@ -35,8 +35,8 @@ export default function AdminPage() {
       return;
     }
 
-    if (authMode === 'register' && !authForm.businessName) {
-      setAuthError('Business name is required for registration.');
+    if (authMode === 'register' && (!authForm.businessName || !authForm.phone)) {
+      setAuthError('Business name and phone number are required.');
       setAuthLoading(false);
       return;
     }
@@ -49,7 +49,8 @@ export default function AdminPage() {
           action: authMode,
           username: authForm.username,
           password: authForm.password,
-          businessName: authForm.businessName
+          businessName: authForm.businessName,
+          phone: authForm.phone
         })
       });
 
@@ -61,7 +62,6 @@ export default function AdminPage() {
         return;
       }
 
-      // Success
       setAdminUser(data.admin);
       localStorage.setItem('momo_admin_session', JSON.stringify(data.admin));
     } catch (e) {
@@ -73,7 +73,7 @@ export default function AdminPage() {
   const handleLogout = () => {
     setAdminUser(null);
     localStorage.removeItem('momo_admin_session');
-    setAuthForm({ username: '', password: '', businessName: '' });
+    setAuthForm({ username: '', password: '', businessName: '', phone: '' });
   };
 
   const loadOrders = async () => {
@@ -112,9 +112,7 @@ export default function AdminPage() {
   const deleteOrder = async (orderId) => {
     if (confirm('Are you sure you want to delete this order?')) {
       try {
-        await fetch(`/api/orders?id=${orderId}`, {
-          method: 'DELETE'
-        });
+        await fetch(`/api/orders?id=${orderId}`, { method: 'DELETE' });
         loadOrders();
       } catch (e) {
         alert("Error deleting order");
@@ -127,7 +125,6 @@ export default function AdminPage() {
     alert('Copied to clipboard!');
   };
 
-  // Filter & Search Logic
   const filteredOrders = orders.filter(order => {
     const matchesSearch = 
       order.name?.toLowerCase().includes(search.toLowerCase()) || 
@@ -160,14 +157,27 @@ export default function AdminPage() {
           {authError && <div className={styles.authError}>{authError}</div>}
 
           {authMode === 'register' && (
-            <input 
-              type="text" 
-              className={styles.vaultInput}
-              style={{ letterSpacing: 'normal', fontSize: '1rem', marginBottom: '1rem' }}
-              value={authForm.businessName}
-              onChange={(e) => setAuthForm({ ...authForm, businessName: e.target.value })}
-              placeholder="Business Name (e.g. One Tap Momo)"
-            />
+            <>
+              <input 
+                type="text" 
+                className={styles.vaultInput}
+                style={{ letterSpacing: 'normal', fontSize: '1rem', marginBottom: '1rem' }}
+                value={authForm.businessName}
+                onChange={(e) => setAuthForm({ ...authForm, businessName: e.target.value })}
+                placeholder="Business Name *"
+              />
+              <input 
+                type="tel" 
+                className={styles.vaultInput}
+                style={{ letterSpacing: 'normal', fontSize: '1rem', marginBottom: '1rem' }}
+                value={authForm.phone}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^\d+]/g, '').slice(0, 14);
+                  setAuthForm({ ...authForm, phone: val });
+                }}
+                placeholder="Business Phone (e.g. +9779800000000) *"
+              />
+            </>
           )}
 
           <input 
@@ -176,7 +186,7 @@ export default function AdminPage() {
             style={{ letterSpacing: 'normal', fontSize: '1rem', marginBottom: '1rem' }}
             value={authForm.username}
             onChange={(e) => setAuthForm({ ...authForm, username: e.target.value })}
-            placeholder="Username"
+            placeholder="Username *"
           />
 
           <input 
@@ -186,7 +196,7 @@ export default function AdminPage() {
             value={authForm.password}
             onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })}
             onKeyDown={(e) => { if (e.key === 'Enter') handleAuth(); }}
-            placeholder="Password"
+            placeholder="Password *"
           />
 
           <button 
@@ -209,9 +219,38 @@ export default function AdminPage() {
     );
   }
 
-  // --- DASHBOARD ---
+  // --- DASHBOARD (with approval gate) ---
+  const isApproved = adminUser.approved === true;
+
   return (
     <div className={styles.adminContainer}>
+      {/* APPROVAL LOCK OVERLAY */}
+      {!isApproved && (
+        <div className={styles.approvalOverlay}>
+          <div className={styles.approvalCard}>
+            <span className={styles.vaultIcon}>⏳</span>
+            <h2>Account Under Review</h2>
+            <p>Your dashboard is pending activation. Once payment is confirmed and your account is approved by the platform admin, you will have full access.</p>
+            <div className={styles.approvalDetails}>
+              <div className={styles.approvalRow}>
+                <span>Business</span>
+                <strong>{adminUser.businessName}</strong>
+              </div>
+              <div className={styles.approvalRow}>
+                <span>Username</span>
+                <strong>{adminUser.username}</strong>
+              </div>
+              <div className={styles.approvalRow}>
+                <span>Status</span>
+                <strong className={styles.pendingBadge}>Pending Approval</strong>
+              </div>
+            </div>
+            <a href="tel:+9779860196101" className={styles.approvalCallBtn}>📞 Contact Admin for Activation</a>
+            <button onClick={handleLogout} className={styles.approvalLogout}>Logout</button>
+          </div>
+        </div>
+      )}
+
       {/* Sidebar */}
       <aside className={styles.sidebar}>
         <div className={styles.logo}>
@@ -234,7 +273,7 @@ export default function AdminPage() {
       </aside>
 
       {/* Main Content */}
-      <main className={styles.mainContent}>
+      <main className={`${styles.mainContent} ${!isApproved ? styles.blurredContent : ''}`}>
         <header className={styles.adminHeader}>
           <div>
             <h1 className={styles.adminTitle}>{adminUser.businessName || 'Orders Management'}</h1>
@@ -242,7 +281,6 @@ export default function AdminPage() {
           </div>
         </header>
 
-        {/* Stats Grid */}
         <div className={styles.statsGrid} style={{ marginBottom: '4rem' }}>
           <div className={styles.statCard}>
             <span className={styles.statValue}>{stats.total}</span>
@@ -262,7 +300,6 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Controls */}
         <div className={styles.controlsRow}>
           <div className={styles.searchWrapper}>
             <span className={styles.searchIcon}>🔍</span>
@@ -274,7 +311,6 @@ export default function AdminPage() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          
           <div className={styles.filterTabs}>
             {['All', 'New', 'Active', 'Ready', 'Completed'].map(tab => (
               <button 
@@ -288,7 +324,6 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Orders Grid */}
         <div className={styles.orderGrid}>
           {filteredOrders.length === 0 ? (
             <div className={styles.emptyState}>
@@ -317,7 +352,6 @@ export default function AdminPage() {
                       <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: 600 }}>Rs. {order.plates * 200}</span>
                     </span>
                   </div>
-
                   <div className={styles.detailItem}>
                     <span className={styles.detailLabel}>Contact</span>
                     <span className={styles.detailValue}>
@@ -325,7 +359,6 @@ export default function AdminPage() {
                       <button className={styles.copyBtn} onClick={() => copyToClipboard(order.phone)}>Copy</button>
                     </span>
                   </div>
-
                   <div className={styles.detailItem}>
                     <span className={styles.detailLabel}>Delivery Address</span>
                     <span className={styles.detailValue} style={{ fontSize: '0.9rem', lineHeight: 1.4 }}>
@@ -333,7 +366,6 @@ export default function AdminPage() {
                       <button className={styles.copyBtn} onClick={() => copyToClipboard(order.location)}>Copy</button>
                     </span>
                   </div>
-                  
                   <div className={styles.detailItem}>
                     <span className={styles.detailLabel}>Order Time</span>
                     <span className={styles.detailValue} style={{ fontSize: '0.85rem' }}>{order.date}</span>

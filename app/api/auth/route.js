@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { action, username, password, businessName } = body;
+    const { action, username, password, businessName, phone } = body;
 
     if (action === 'register') {
       // Check if username already exists
@@ -19,10 +19,16 @@ export async function POST(request) {
         return NextResponse.json({ error: 'Username already exists' }, { status: 409 });
       }
 
-      // Create new admin
+      // Create new admin (approved = false by default, needs super admin approval)
       const { data, error } = await supabase
         .from('admins')
-        .insert([{ username, password, business_name: businessName }])
+        .insert([{ 
+          username, 
+          password, 
+          business_name: businessName,
+          phone: phone || '',
+          approved: false 
+        }])
         .select()
         .single();
 
@@ -30,7 +36,13 @@ export async function POST(request) {
 
       return NextResponse.json({ 
         success: true, 
-        admin: { id: data.id, username: data.username, businessName: data.business_name } 
+        admin: { 
+          id: data.id, 
+          username: data.username, 
+          businessName: data.business_name,
+          phone: data.phone,
+          approved: data.approved
+        } 
       });
     }
 
@@ -48,7 +60,13 @@ export async function POST(request) {
 
       return NextResponse.json({ 
         success: true, 
-        admin: { id: data.id, username: data.username, businessName: data.business_name } 
+        admin: { 
+          id: data.id, 
+          username: data.username, 
+          businessName: data.business_name,
+          phone: data.phone,
+          approved: data.approved
+        } 
       });
     }
 

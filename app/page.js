@@ -15,8 +15,17 @@ export default function MomoPage() {
   const [hasTapped, setHasTapped] = useState(false);
   const [isLaunching, setIsLaunching] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [businessPhone, setBusinessPhone] = useState('+9779860196101');
   const trackingRef = useRef(null);
   const successRef = useRef(null);
+
+  // Fetch business phone from config
+  useEffect(() => {
+    fetch('/api/config')
+      .then(res => res.json())
+      .then(data => { if (data.phone) setBusinessPhone(data.phone); })
+      .catch(() => {});
+  }, []);
 
   // Poll for status updates from the server
   useEffect(() => {
@@ -184,7 +193,7 @@ export default function MomoPage() {
               <h4 className={styles.successTitle}>Order Placed Successfully! 🥟</h4>
               <p className={styles.successText}>We have received your request. Our chefs are already getting started! You can track your real-time delivery status here.</p>
               <div className={styles.successActions}>
-                <a href="tel:+9779860196101" className={styles.callSupportBtn}>📞 Need Help? Call Admin</a>
+                <a href={`tel:${businessPhone}`} className={styles.callSupportBtn}>📞 Need Help? Call Admin</a>
                 <button onClick={() => setShowSuccess(false)} className={styles.dismissBtn}>Got it</button>
               </div>
             </div>
@@ -226,7 +235,7 @@ export default function MomoPage() {
                 </div>
 
                 <div className={styles.trackerFooter}>
-                  <a href="tel:+9779860196101" className={styles.trackerCallBtn}>
+                  <a href={`tel:${businessPhone}`} className={styles.trackerCallBtn}>
                     📞 Call for Direct Support
                   </a>
                 </div>
@@ -317,7 +326,7 @@ export default function MomoPage() {
 
         {activeOrders.length === 0 && (
           <div className={styles.actionGroup} style={{ marginTop: '3rem' }}>
-            <a href="tel:+9779860196101" className={styles.callBtn}>📞 Call for Quick Support</a>
+            <a href={`tel:${businessPhone}`} className={styles.callBtn}>📞 Call for Quick Support</a>
           </div>
         )}
       </section>
