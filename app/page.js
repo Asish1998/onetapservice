@@ -45,15 +45,27 @@ export default function SaaSLandingPage() {
         <div className={styles.featureGrid}>
           <div className={styles.featureCard}>
             <h3>🌐 Unique Ordering Link</h3>
-            <p>Customers order directly from your personal site (e.g., onetapmomo.com/order/your-business).</p>
+            <p>Customers order directly from your personal, branded ordering page.</p>
           </div>
           <div className={styles.featureCard}>
-            <h3>📊 Live Order Dashboard</h3>
-            <p>Track new orders, update live statuses, and complete deliveries with a single tap.</p>
+            <h3>🤖 MomoBot AI Assistant</h3>
+            <p>A smart, conversational chat widget that captures customer details and autonomously places orders.</p>
           </div>
           <div className={styles.featureCard}>
-            <h3>💰 Instant Setup</h3>
-            <p>Once you register and make payment, get your dashboard unlocked immediately to start accepting orders.</p>
+            <h3>📊 BI & Analytics Dashboard</h3>
+            <p>Visualize peak ordering hours, revenue generation, and workflow statuses with dynamic interactive charts.</p>
+          </div>
+          <div className={styles.featureCard}>
+            <h3>🔊 AI Kitchen Voice Copilot</h3>
+            <p>Get instant voice announcements in the kitchen the second a new order arrives—hands-free tracking.</p>
+          </div>
+          <div className={styles.featureCard}>
+            <h3>🚀 Optimized & Scalable</h3>
+            <p>Secured API routing and smart polling logic ensures the platform gracefully handles 1,000+ concurrent customers.</p>
+          </div>
+          <div className={styles.featureCard}>
+            <h3>💰 Complete Vendor Control</h3>
+            <p>Register online, get an instant secure dashboard, and manage statuses from &apos;Preparing&apos; to &apos;Completed&apos;.</p>
           </div>
         </div>
       </section>
