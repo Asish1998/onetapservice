@@ -1,11 +1,18 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
-export async function GET() {
-  const { data, error } = await supabase
-    .from('orders')
-    .select('*')
-    .order('id', { ascending: false });
+export async function GET(req) {
+  const { searchParams } = new URL(req.url);
+  const adminId = searchParams.get('admin_id');
+
+  let query = supabase.from('orders').select('*').order('id', { ascending: false });
+
+  // Filter by admin if provided (admin dashboard view)
+  if (adminId) {
+    query = query.eq('admin_id', adminId);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

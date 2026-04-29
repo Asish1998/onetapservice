@@ -16,14 +16,18 @@ export default function MomoPage() {
   const [isLaunching, setIsLaunching] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [businessPhone, setBusinessPhone] = useState('+9779860196101');
+  const [adminId, setAdminId] = useState(null);
   const trackingRef = useRef(null);
   const successRef = useRef(null);
 
-  // Fetch business phone from config
+  // Fetch business config (phone + admin_id)
   useEffect(() => {
     fetch('/api/config')
       .then(res => res.json())
-      .then(data => { if (data.phone) setBusinessPhone(data.phone); })
+      .then(data => { 
+        if (data.phone) setBusinessPhone(data.phone);
+        if (data.adminId) setAdminId(data.adminId);
+      })
       .catch(() => {});
   }, []);
 
@@ -78,7 +82,7 @@ export default function MomoPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const newOrder = { ...formData, status: 'Placed', date: new Date().toLocaleString(), id: Date.now() };
+    const newOrder = { ...formData, status: 'Placed', date: new Date().toLocaleString(), id: Date.now(), admin_id: adminId };
     
     try {
       const response = await fetch('/api/orders', {

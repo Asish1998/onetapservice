@@ -77,8 +77,9 @@ export default function AdminPage() {
   };
 
   const loadOrders = async () => {
+    if (!adminUser) return;
     try {
-      const response = await fetch('/api/orders');
+      const response = await fetch(`/api/orders?admin_id=${adminUser.id}`);
       const savedOrders = await response.json();
       if (Array.isArray(savedOrders)) {
         setOrders(savedOrders);
