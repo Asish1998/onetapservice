@@ -121,7 +121,10 @@ export default function AdminPage() {
     try {
       await fetch('/api/orders', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-dashboard-secret': 'secure-momo-dashboard'
+        },
         body: JSON.stringify({ id: orderId, status: newStatus })
       });
       loadOrders();

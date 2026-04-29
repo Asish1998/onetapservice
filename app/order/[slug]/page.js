@@ -48,16 +48,19 @@ export default function BusinessOrderPage() {
   // Poll for status updates
   useEffect(() => {
     const pollInterval = setInterval(async () => {
+      if (!adminId) return;
+      const myOrderIds = JSON.parse(localStorage.getItem('momo_my_order_ids') || '[]');
+      if (myOrderIds.length === 0) return; // Halt polling unless customer has placed an order
+
       try {
-        const response = await fetch(`/api/orders?admin_id=${adminId}`);
+        const response = await fetch(`/api/orders?admin_id=${adminId}&ids=${myOrderIds.join(',')}`);
         const orders = await response.json();
         if (Array.isArray(orders)) {
-          const myOrderIds = JSON.parse(localStorage.getItem('momo_my_order_ids') || '[]');
-          const myActiveOrders = orders.filter(o => myOrderIds.includes(o.id) && o.status !== 'Received');
+          const myActiveOrders = orders.filter(o => o.status !== 'Received');
           setActiveOrders(myActiveOrders);
         }
       } catch (e) {}
-    }, 2000);
+    }, 10000);
     return () => clearInterval(pollInterval);
   }, [adminId]);
 
@@ -124,11 +127,16 @@ export default function BusinessOrderPage() {
 
   const handleBotSubmit = (e) => {
     e.preventDefault();
-    if (!botInput.trim()) return;
+    if (!botInput.trim() || botStep === 'submitting' || botStep === 'done') return;
 
     const userText = botInput.trim();
     setBotMessages(prev => [...prev, { role: 'user', text: userText }]);
     setBotInput('');
+    
+    // Lock submit state immediately
+    if (botStep === 'ask_location') {
+      setBotStep('submitting');
+    }
 
     setTimeout(async () => {
       let nextMsg = '';
@@ -136,26 +144,38 @@ export default function BusinessOrderPage() {
 
       try {
         if (botStep === 'ask_name') {
-           setFormData(prev => ({ ...prev, name: userText }));
-           nextMsg = `Nice to meet you, ${userText.split(' ')[0]}! 🥟 How many plates of hot steamed momo would you like?`;
-           nextStep = 'ask_plates';
+           if (userText.length < 2) {
+             nextMsg = "Could you please provide your full name so I can put it on the order?";
+           } else {
+             setFormData(prev => ({ ...prev, name: userText }));
+             nextMsg = `Nice to meet you, ${userText.split(' ')[0]}! 🥟 How many plates of hot steamed momo would you like?`;
+             nextStep = 'ask_plates';
+           }
         } 
         else if (botStep === 'ask_plates') {
-           const plates = parseInt(userText.replace(/\D/g, '')) || 1;
-           setFormData(prev => ({ ...prev, plates }));
-           nextMsg = `Got it, ${plates} plates! 📱 What is your 10-digit phone number?`;
-           nextStep = 'ask_phone';
+           const parsed = parseInt(userText.replace(/\D/g, ''));
+           if (!parsed && !userText.toLowerCase().match(/one|two|single|couple/)) {
+             nextMsg = "I didn't catch a number. How many plates? (e.g. '2' or '2 plates')";
+           } else {
+             const plates = parsed || (userText.toLowerCase().includes('two') ? 2 : 1);
+             setFormData(prev => ({ ...prev, plates }));
+             nextMsg = `Got it, ${plates} plates! 📱 What is your 10-digit phone number?`;
+             nextStep = 'ask_phone';
+           }
         }
         else if (botStep === 'ask_phone') {
            const phone = userText.replace(/\D/g, '').slice(0, 10);
-           setFormData(prev => ({ ...prev, phone }));
-           nextMsg = `Almost done! 📍 What is your exact delivery address or location?`;
-           nextStep = 'ask_location';
+           if (phone.length < 10) {
+             nextMsg = "Please provide a valid 10-digit phone number so we can reach you!";
+           } else {
+             setFormData(prev => ({ ...prev, phone }));
+             nextMsg = `Almost done! 📍 What is your exact delivery address or location?`;
+             nextStep = 'ask_location';
+           }
         }
         else if (botStep === 'ask_location') {
            setFormData(prev => ({ ...prev, location: userText }));
-           nextMsg = `Perfect! Sending your order to the kitchen now...`;
-           nextStep = 'submitting';
+           setBotMessages(prev => [...prev, { role: 'bot', text: 'Perfect! Sending your order to the kitchen now...' }]);
            
            const newOrder = { 
              name: formData.name || 'Bot User', 
@@ -178,15 +198,20 @@ export default function BusinessOrderPage() {
               localStorage.setItem('momo_my_order_ids', JSON.stringify([newOrder.id, ...myOrderIds]));
               setBotMessages(prev => [...prev, { role: 'system', text: '✅ Order Placed Successfully!' }]);
               setShowSuccess(true);
-              setTimeout(() => { setIsBotOpen(false); }, 2000);
+              setBotStep('done');
+              setTimeout(() => { setIsBotOpen(false); }, 3000);
+            } else {
+              setBotMessages(prev => [...prev, { role: 'system', text: '❌ Failed. Try manual form.' }]);
+              setBotStep('error');
             }
+            return; // completely halt typical flow
         }
       } catch (e) {
         nextMsg = "Sorry, something went wrong. Let's try again using the manual form.";
         nextStep = 'error';
       }
 
-      if (nextStep !== 'submitting') {
+      if (botStep !== 'ask_location') {
         setBotMessages(prev => [...prev, { role: 'bot', text: nextMsg }]);
         setBotStep(nextStep);
       }
@@ -338,44 +363,49 @@ export default function BusinessOrderPage() {
         )}
       </section>
 
-      {/* MOMOBOT WIDGET OVERLAY */}
-      <div 
-        className={styles.momoBotFab} 
-        onClick={() => setIsBotOpen(!isBotOpen)}
-      >
-        {isBotOpen ? '✕' : '🤖'}
-      </div>
-
-      {isBotOpen && (
-        <div className={styles.momoBotWindow}>
-          <div className={styles.momoBotHeader}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span>🤖</span> MomoBot Order Assistant
-            </div>
+      {/* MOMOBOT WIDGET OVERLAY - ONLY SHOWS ON SPLASH SCREEN */}
+      {!hasTapped && (
+        <>
+          <div 
+            className={styles.momoBotFab} 
+            onClick={(e) => { e.stopPropagation(); setIsBotOpen(!isBotOpen); }}
+          >
+            {isBotOpen ? '✕' : '🤖'}
           </div>
-          
-          <div className={styles.momoBotBody}>
-            {botMessages.map((msg, i) => (
-              <div key={i} className={`${msg.role === 'system' ? styles.momoBotSystemMsg : styles.momoBotMsg} ${msg.role === 'bot' ? styles.momoBotMsgBot : msg.role === 'user' ? styles.momoBotMsgUser : ''}`}>
-                {msg.text}
+
+          {isBotOpen && (
+            <div className={styles.momoBotWindow} onClick={(e) => e.stopPropagation()}>
+              <div className={styles.momoBotHeader}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span>🤖</span> MomoBot Order Assistant
+                </div>
+                <button onClick={() => setIsBotOpen(false)} style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: 'bold', cursor: 'pointer', fontSize: '1rem' }}>✕</button>
               </div>
-            ))}
-          </div>
+              
+              <div className={styles.momoBotBody}>
+                {botMessages.map((msg, i) => (
+                  <div key={i} className={`${msg.role === 'system' ? styles.momoBotSystemMsg : styles.momoBotMsg} ${msg.role === 'bot' ? styles.momoBotMsgBot : msg.role === 'user' ? styles.momoBotMsgUser : ''}`}>
+                    {msg.text}
+                  </div>
+                ))}
+              </div>
 
-          {(botStep !== 'submitting' && botStep !== 'error') && (
-            <form className={styles.momoBotFooter} onSubmit={handleBotSubmit}>
-              <input 
-                type="text" 
-                placeholder="Type your answer here..." 
-                className={styles.momoBotInput}
-                value={botInput}
-                onChange={(e) => setBotInput(e.target.value)}
-                autoFocus
-              />
-              <button type="submit" className={styles.momoBotSend} disabled={!botInput.trim()}>➤</button>
-            </form>
+              {(botStep !== 'submitting' && botStep !== 'error' && botStep !== 'done') && (
+                <form className={styles.momoBotFooter} onSubmit={handleBotSubmit}>
+                  <input 
+                    type="text" 
+                    placeholder="Type your answer here..." 
+                    className={styles.momoBotInput}
+                    value={botInput}
+                    onChange={(e) => setBotInput(e.target.value)}
+                    autoFocus
+                  />
+                  <button type="submit" className={styles.momoBotSend} disabled={!botInput.trim()}>➤</button>
+                </form>
+              )}
+            </div>
           )}
-        </div>
+        </>
       )}
 
       <a href="/admin" className={styles.adminFloater} title="Run as admin for your business">A</a>
