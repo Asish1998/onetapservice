@@ -261,7 +261,7 @@ export default function AdminPage() {
           <div className={`${styles.navItem} ${styles.navItemActive}`}>
             <span>📊</span> Dashboard
           </div>
-          <div className={styles.navItem} onClick={() => window.open('/', '_blank')}>
+          <div className={styles.navItem} onClick={() => window.open(`/order/${adminUser.username}`, '_blank')}>
             <span>🌐</span> View Site
           </div>
           <div className={styles.navItem} onClick={() => loadOrders()}>
