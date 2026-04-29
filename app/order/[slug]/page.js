@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import styles from '../../app/page.module.css';
+import styles from '../../page.module.css';
 
 export default function BusinessOrderPage() {
   const params = useParams();
