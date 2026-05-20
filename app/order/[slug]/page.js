@@ -109,7 +109,7 @@ export default function BusinessOrderPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const newOrder = { ...formData, status: 'Placed', date: new Date().toLocaleString(), id: Date.now(), admin_id: adminId };
+    const newOrder = { ...formData, status: 'Placed', date: new Date().toLocaleString(), id: Math.floor(1000 + Math.random() * 9000), admin_id: adminId };
     try {
       const response = await fetch('/api/orders', {
         method: 'POST',
@@ -219,7 +219,7 @@ export default function BusinessOrderPage() {
              plates: formData.plates || 1, 
              status: 'Placed', 
              date: new Date().toLocaleString(), 
-             id: Date.now(), 
+             id: Math.floor(1000 + Math.random() * 9000), 
              admin_id: adminId 
            };
            

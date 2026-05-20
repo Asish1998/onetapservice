@@ -17,9 +17,15 @@ export default function AdminPage() {
   const [authError, setAuthError] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
 
-  // AI Voice Copilot states
   const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [lastTranscript, setLastTranscript] = useState('');
+  const [voiceFeedback, setVoiceFeedback] = useState('');
+  const recognitionRef = useRef(null);
+  const processingRef = useRef(false);
+  const ordersRef = useRef([]);
   const lastOrderId = useRef(-1);
+  const pendingVoiceOrderRef = useRef(null);
 
   // Check for saved session on mount
   useEffect(() => {
@@ -117,9 +123,163 @@ export default function AdminPage() {
     }
   }, [adminUser, voiceEnabled]);
 
-  const updateStatus = async (orderId, newStatus) => {
+  useEffect(() => { ordersRef.current = orders; }, [orders]);
+
+  // Use a ref to always have the latest processVoiceCommand without stale closures
+  const processVoiceCommandRef = useRef(null);
+
+  // This function is recreated each render with fresh closures over state setters
+  processVoiceCommandRef.current = async (command) => {
+    if (processingRef.current) return;
+    
+    const transcript = command.toLowerCase().trim();
+    setLastTranscript(transcript);
+    
+    // Map spoken number words to digits
+    const numberMap = { 'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10 };
+    let normalized = transcript;
+    Object.keys(numberMap).forEach(word => {
+      normalized = normalized.replace(new RegExp(`\\b${word}\\b`, 'g'), numberMap[word]);
+    });
+    
+    // Match "order 1", "number 1", or just a plain number at the start
+    let shortcutNum = null;
+    const orderMatch = normalized.match(/(?:order|number|item)\s+([0-9]+)/) || normalized.match(/^([0-9]+)\s+/);
+    if (orderMatch) {
+      shortcutNum = parseInt(orderMatch[1], 10);
+      pendingVoiceOrderRef.current = shortcutNum;
+    } else if (pendingVoiceOrderRef.current) {
+      shortcutNum = pendingVoiceOrderRef.current;
+    }
+    
+    // Determine status
+    let newStatus = null;
+    if (normalized.match(/\bread|\bserv/)) newStatus = 'Ready';
+    else if (normalized.match(/\bprepar|\bprogress|\bmaking|\bkitchen|\bcook/)) newStatus = 'In Progress';
+    else if (normalized.match(/\btransit|\bdeliver|\bway|\bsent|\brider|\bship/)) newStatus = 'In Delivery';
+    else if (normalized.match(/\bcomplet|\breceiv|\bdone|\bfinish|\bsuccess/)) newStatus = 'Received';
+    
+    if (!shortcutNum) {
+      if (newStatus) {
+        setVoiceFeedback('❌ Say: "Order 1 Ready" or "Number 2 Done"');
+      }
+      return;
+    }
+    
+    const targetOrder = ordersRef.current[shortcutNum - 1];
+    if (!targetOrder) {
+      setVoiceFeedback(`❌ #${shortcutNum} not found. ${ordersRef.current.length} orders visible.`);
+      return;
+    }
+    
+    if (newStatus) {
+      processingRef.current = true;
+      setVoiceFeedback(`⏳ #${shortcutNum} ${targetOrder.name} → ${newStatus}...`);
+      
+      try {
+        const resp = await fetch('/api/orders', {
+          method: 'PATCH',
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-dashboard-secret': 'secure-momo-dashboard'
+          },
+          body: JSON.stringify({ id: targetOrder.id, status: newStatus })
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || 'Update failed');
+        
+        setVoiceFeedback(`✅ #${shortcutNum} ${targetOrder.name} → ${newStatus}`);
+        loadOrders();
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.speak(new SpeechSynthesisUtterance(`${targetOrder.name}, marked as ${newStatus}`));
+        }
+      } catch (e) {
+        setVoiceFeedback(`❌ Error: ${e.message}`);
+      }
+      
+      setTimeout(() => { processingRef.current = false; }, 2000);
+      pendingVoiceOrderRef.current = null;
+    } else {
+      setVoiceFeedback(`🎯 #${shortcutNum} ${targetOrder.name}. Say: Ready, Preparing, Transit, or Done.`);
+    }
+  };
+
+  // SpeechRecognition setup — runs once on mount only
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return;
+
+    const recognition = new SR();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => {
+      setIsListening(false);
+      // Auto-restart if voice is still enabled
+      setTimeout(() => {
+        if (recognitionRef.current) {
+          try { recognitionRef.current.start(); } catch(e){}
+        }
+      }, 300);
+    };
+
+    recognition.onresult = (event) => {
+      let finalText = '';
+      let interimText = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        const t = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalText += t;
+        } else {
+          interimText += t;
+        }
+      }
+      // Always show what's being heard
+      setLastTranscript((finalText || interimText).toLowerCase());
+      
+      // Only process final results
+      if (finalText) {
+        // Use ref to call the LATEST version of the function
+        processVoiceCommandRef.current?.(finalText.toLowerCase());
+      }
+    };
+
+    recognitionRef.current = recognition;
+
+    // Console testing helper
+    window.simulateVoice = (cmd) => processVoiceCommandRef.current?.(cmd);
+
+    return () => {
+      recognition.stop();
+      recognitionRef.current = null;
+    };
+  }, []); // Mount once only
+
+  // Start/stop recognition when voiceEnabled changes
+  useEffect(() => {
+    if (!recognitionRef.current) return;
+    if (voiceEnabled) {
+      try { recognitionRef.current.start(); } catch(e){}
+    } else {
+      try { recognitionRef.current.stop(); } catch(e){}
+    }
+  }, [voiceEnabled]);
+
+  useEffect(() => {
+    if (voiceFeedback) {
+      const timer = setTimeout(() => setVoiceFeedback(''), 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [voiceFeedback]);
+
+  const updateStatus = async (orderId, newStatus, isVoice = false) => {
+    if (isVoice) setVoiceFeedback(`⏳ Sending update for Order ${orderId}...`);
     try {
-      await fetch('/api/orders', {
+      const response = await fetch('/api/orders', {
         method: 'PATCH',
         headers: { 
           'Content-Type': 'application/json',
@@ -127,16 +287,44 @@ export default function AdminPage() {
         },
         body: JSON.stringify({ id: orderId, status: newStatus })
       });
+      
+      const resData = await response.json();
+      if (!response.ok) throw new Error(resData.error || 'Update failed');
+      
       loadOrders();
+
+      if (isVoice) {
+        setVoiceFeedback(`✅ Order ${orderId} is now ${newStatus}`);
+        if ('speechSynthesis' in window) {
+           window.speechSynthesis.cancel();
+           const msg = new SpeechSynthesisUtterance(`Order ${orderId} moved to ${newStatus}`);
+           window.speechSynthesis.speak(msg);
+        }
+      }
     } catch (e) {
-      alert("Error updating status");
+      console.error("Update error:", e);
+      if (isVoice) {
+        setVoiceFeedback(`❌ API Error: ${e.message}`);
+        if ('speechSynthesis' in window) {
+           window.speechSynthesis.cancel();
+           const msg = new SpeechSynthesisUtterance(`Failed to update. ${e.message}`);
+           window.speechSynthesis.speak(msg);
+        }
+      } else {
+        alert(`Error: ${e.message}`);
+      }
     }
   };
 
   const deleteOrder = async (orderId) => {
     if (confirm('Are you sure you want to delete this order?')) {
       try {
-        await fetch(`/api/orders?id=${orderId}`, { method: 'DELETE' });
+        await fetch(`/api/orders?id=${orderId}`, { 
+          method: 'DELETE',
+          headers: {
+            'x-dashboard-secret': 'secure-momo-dashboard'
+          }
+        });
         loadOrders();
       } catch (e) {
         alert("Error deleting order");
@@ -351,7 +539,7 @@ export default function AdminPage() {
             <button 
               onClick={() => {
                 if (!voiceEnabled && 'speechSynthesis' in window) {
-                   const msg = new SpeechSynthesisUtterance("Voice copilot activated.");
+                   const msg = new SpeechSynthesisUtterance("Voice copilot activated. Tap on an order then say the status.");
                    window.speechSynthesis.speak(msg);
                 }
                 setVoiceEnabled(!voiceEnabled);
@@ -372,6 +560,20 @@ export default function AdminPage() {
             >
               <span style={{ fontSize: '1.2rem' }}>{voiceEnabled ? '🔊' : '🔇'}</span> {voiceEnabled ? 'Voice On' : 'Voice Off'}
             </button>
+            {voiceEnabled && (
+              <div style={{ marginTop: '0.6rem', padding: '0.6rem', background: '#f1f5f9', borderRadius: '10px', fontSize: '0.85rem' }}>
+                <div style={{ color: '#94a3b8', fontSize: '0.75rem', marginBottom: '0.4rem' }}>Say: <strong>"Order 1 Ready"</strong> or <strong>"Number 2 Done"</strong></div>
+                <div style={{ color: '#64748b', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.2rem', fontWeight: 800 }}>{isListening ? '🎙️ Listening...' : '🔇 Mic paused'}</div>
+                <div style={{ color: lastTranscript ? '#0f172a' : '#94a3b8', minHeight: '1.2rem', fontWeight: 600 }}>
+                   {lastTranscript || 'Waiting for speech...'}
+                </div>
+                {voiceFeedback && (
+                  <div style={{ marginTop: '0.5rem', color: voiceFeedback.includes('✅') ? '#10b981' : voiceFeedback.includes('⏳') ? '#f59e0b' : '#ef4444', borderTop: '1px dashed #cbd5e1', paddingTop: '0.4rem', fontWeight: 700 }}>
+                    {voiceFeedback}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </header>
 
@@ -452,12 +654,15 @@ export default function AdminPage() {
               <p style={{ color: '#64748b' }}>Try adjusting your filters or search terms.</p>
             </div>
           ) : (
-            filteredOrders.map(order => (
+            filteredOrders.map((order, idx) => (
               <div key={order.id} className={`${styles.orderCard} ${styles['priority' + order.status.replace(' ', '')] || ''}`}>
                 <div className={styles.orderHeader}>
                   <div className={styles.customerInfo}>
                     <h3>{order.name}</h3>
-                    <span className={styles.orderId}>ID: #{order.id}</span>
+                    <span className={styles.orderId}>
+                      {voiceEnabled && <span style={{ background: '#6366f1', color: 'white', padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 800, marginRight: '0.4rem' }}>🎙️ #{idx + 1}</span>}
+                      ID: #{order.id}
+                    </span>
                   </div>
                   <div className={`${styles.statusBadge} ${styles['status-' + (order.status || 'Placed').replace(' ', '-')]}`}>
                     {order.status || 'Placed'}
